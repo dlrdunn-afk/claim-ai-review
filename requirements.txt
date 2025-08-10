@@ -11,3 +11,7 @@ ezdxf
 reportlab
 pymupdf
 
+
+Flask>=3.0
+Werkzeug>=3.0
+pandas>=2.0

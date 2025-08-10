@@ -1,10 +1,23 @@
+#!/usr/bin/env python3
+"""
+Flask UI for CLAIM‑AI
+
+Features:
+- Home page with “New Claim” and “Existing Claim”
+- Upload form for a new claim (files stored under data/<job-id>/)
+- After upload the system creates a blank room‑CSV and shows a table
+  where the user can confirm or edit dimensions.
+- Saving the table writes the merged CSV, runs the full pipeline,
+  and presents a download link for the final Xactimate CSV.
+"""
+
 from flask import Flask, request, render_template, redirect, url_for, send_file
 import os
 import uuid
 import subprocess                     # to call other scripts
 from pathlib import Path
 import pandas as pd
-
+from werkzeug.utils import secure_filename
 # -----------------------------------------------------------------
 # Relative import – works when this file is executed as a module
 # -----------------------------------------------------------------
@@ -85,7 +98,7 @@ def new_claim():
         for key in request.files:
             f = request.files[key]
             if f and allowed_file(f.filename):
-                filename = os.path.basename(f.filename)
+                filename = secure_filename(f.filename)
                 save_path = job_dir / filename
                 f.save(save_path)
 

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>New Claim – Upload Files</title>
+    <style>
+        body {font-family: Arial, sans-serif; margin: 2rem;}
+        .field {margin-bottom: 1rem;}
+        label {display: block; font-weight: bold; margin-bottom: 0.3rem;}
+        input[type="file"] {margin-top: 0.2rem;}
+        button {padding: 0.6rem 1.2rem; font-size: 1rem;}
+    </style>
+</head>
+<body>
+    <h1>New Claim – Upload Required Documents</h1>
+
+    <form method="post" enctype="multipart/form-data">
+
+        <!-- Optional Job ID (or let the server generate one) -->
+        <div class="field">
+            <label for="job_id">Job ID (optional):</label>
+            <input type="text" name="job_id" id="job_id"
+                   placeholder="e.g. claim‑2024‑001">
+        </div>
+
+        <!-- Mandatory files -->
+        <div class="field">
+            <label for="policy_pdf">Policy / Declarations (PDF)</label>
+            <input type="file" name="policy_pdf" id="policy_pdf"
+                   accept=".pdf" required>
+        </div>
+
+        <div class="field">
+            <label for="iguide_xml">iGUIDE XML (room data)</label>
+            <input type="file" name="iguide_xml" id="iguide_xml"
+                   accept=".xml" required>
+        </div>
+
+        <div class="field">
+            <label for="iguide_jpg">iGUIDE Floor‑plan (JPG/PNG)</label>
+            <input type="file" name="iguide_jpg" id="iguide_jpg"
+                   accept=".jpg,.jpeg,.png" required>
+        </div>
+
+        <!-- **One place for all photos** – multiple selection -->
+        <div class="field">
+            <label for="photos">Photos (select any number of images)</label>
+            <input type="file" name="photos" id="photos"
+                   accept="image/*" multiple>
+        </div>
+
+        <button type="submit">Upload &amp; Continue</button>
+    </form>
+
+    <p><a href="{{ url_for('home') }}">← Back to Home</a></p>
+</body>
+</html>
