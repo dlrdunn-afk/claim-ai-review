@@ -1,0 +1,11 @@
+{
+  "ALE_coverage": "yes",
+  "ordinance_and_law": "yes",
+  "mold_limit_found": "unknown",
+  "exclusions": [
+    "flood",
+    "earthquake",
+    "wear and tear",
+    "neglect"
+  ]
+}

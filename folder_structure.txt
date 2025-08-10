@@ -1,0 +1,58 @@
+.
+├── data
+│   └── job-0001
+│       ├── Base board damaged copy.jpeg
+│       ├── ChatGPT Image Aug 6, 2025 at 09_52_02 PM.png
+│       ├── Flood Damage video.mov
+│       ├── Images
+│       │   ├── Screenshot 2024-12-17 at 9.54.11 AM copy.png
+│       │   ├── closet copy.pdf
+│       │   └── job_photos.pdf
+│       ├── Wall mold copy.jpeg
+│       ├── claim_assumptions.json
+│       ├── estimate
+│       │   └── XACTDOC.ZIPXML
+│       ├── esx_unpacked
+│       ├── floorplan
+│       ├── ignored
+│       ├── iguide
+│       │   ├── 3938584280.JPG
+│       │   └── 3938598757.XML
+│       ├── job_metadata.json
+│       ├── policy.pdf
+│       ├── policy_summary.json
+│       ├── sarena_irwin.esx
+│       └── sarena_irwin.zip
+├── detect
+│   └── process_images.py
+├── estimate
+│   ├── Xactimate_Template.csv
+│   ├── engine.py
+│   └── generate_estimate.py
+├── folder_structure.txt
+├── iguide
+│   └── parse_iguide.py
+├── intake
+│   └── collect_job_info.py
+├── out
+│   ├── estimate_xact.csv
+│   ├── job-0001_detections
+│   │   ├── Base board damaged copy.jpeg
+│   │   ├── ChatGPT Image Aug 6, 2025 at 09_52_02 PM.png
+│   │   └── Wall mold copy.jpeg
+│   └── job-0001_detections.csv
+├── policy
+│   └── parse_policy.py
+├── pricing
+│   └── pricing.csv
+├── requirements.txt
+├── rules
+│   ├── code_map.yaml
+│   ├── rules.yaml
+│   └── rules_engine.py
+├── tools
+│   ├── extract_images_from_pdf.py
+│   └── smart_esx_importer.py
+└── yolov8n.pt
+
+19 directories, 37 files

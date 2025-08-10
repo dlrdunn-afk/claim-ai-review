@@ -1,0 +1,38 @@
+SYSTEM OVERVIEW – CLAIM-AI PROJECT
+
+1. WHAT HAS BEEN DONE SO FAR
+- Built a modular Python pipeline that:
+  • Reads and processes property damage photos, iGUIDE floorplans (XML + JPG), and policy PDFs.
+  • Detects damage using YOLOv8 and assigns perils (water, flood, fire, wind, etc.).
+  • Parses iGUIDE XML for room names, dimensions, and layout (current wall length bug acknowledged).
+  • Merges OCR from floorplan images with XML to validate room names and dimensions.
+  • Generates room-by-room estimate CSV files compatible with Xactimate (quantities only, no pricing).
+  • Adds unit types (SQFT, LF, QTY) automatically based on line item descriptions.
+  • Allows manual dimension input via auto-generated CSV form when XML data is unreliable.
+  • Organizes job files into a structured folder hierarchy for automation.
+
+2. NEWLY ADDED CAPABILITIES
+- Integrated a **local LLaMA 3 chatbot** using Ollama:
+  • Runs fully offline (no API cost).
+  • Knows the system context and can assist with development questions.
+  • Remembers conversation history during a session.
+  • Can help debug Python scripts, YOLO training, and VS Code usage.
+  • Future-ready for long-term memory storage.
+
+3. CURRENT LIMITATIONS
+- XML parsing still produces wrong wall lengths.
+- Policy parsing doesn’t yet fully extract all coverage limits (e.g., mold).
+- No automated pricing — Xactimate pricing must be added after import.
+- OCR room-dimension pairing is basic and not fully automated.
+- No web search capability for auto-training.
+- Chatbot does not yet have persistent memory across sessions.
+
+4. NEXT PLANNED STEPS
+- Fix XML wall length bug.
+- Add enhanced OCR to extract and pair room dimensions automatically.
+- Improve policy parser to capture all coverage limits and rules.
+- Allow chatbot to read project folder files for better contextual help.
+- Implement optional web search for chatbot to learn from live sources.
+- Train YOLOv8 with more damage categories for better accuracy.
+- Add persistent memory for chatbot so it learns across sessions.
+

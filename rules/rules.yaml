@@ -1,0 +1,36 @@
+defaults:
+  ceiling_height_ft: 9
+
+formulas:
+  paint_walls_sf: "(perimeter_lf * height_ft) - openings_sf"
+  baseboard_lf: "perimeter_lf - door_widths_lf"
+  ceiling_sf: "area_sf"
+
+mappings:
+  water_stain_ceiling:
+    outputs:
+      - code: "DW-PATCH"
+        qty_from: "mask_sf"
+        min_if_missing: 4
+        unit: "sf"
+        notes: "From detected ceiling water stain"
+      - code: "PRIME-PAINT"
+        qty_from: "mask_sf"
+        min_if_missing: 4
+        unit: "sf"
+        notes: "Finish of patched area"
+
+  baseboard_rot:
+    outputs:
+      - code: "BASEBOARD-RR"
+        qty_from: "baseboard_lf"
+        unit: "lf"
+        notes: "Detected baseboard damage"
+
+room_scopes:
+  paint_walls:
+    outputs:
+      - code: "PAINT-WALLS"
+        qty_from: "paint_walls_sf"
+        unit: "sf"
+        notes: "Walls paint per room"

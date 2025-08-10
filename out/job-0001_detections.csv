@@ -1,0 +1,4 @@
+image,label,confidence,x1,y1,x2,y2
+Wall mold copy.jpeg,suitcase,0.7236565351486206,399,304,511,444
+Wall mold copy.jpeg,suitcase,0.346562922000885,514,396,601,469
+Base board damaged copy.jpeg,boat,0.3377891182899475,2,89,349,640

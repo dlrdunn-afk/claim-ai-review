@@ -1,0 +1,13 @@
+water_stain_ceiling:
+  - code: "DW-PATCH"
+    unit: "sf"
+  - code: "PRIME-PAINT"
+    unit: "sf"
+
+baseboard_rot:
+  - code: "BASEBOARD-RR"
+    unit: "lf"
+
+paint_walls_room_scope:
+  - code: "PAINT-WALLS"
+    unit: "sf"

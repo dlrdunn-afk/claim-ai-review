@@ -1,0 +1,7 @@
+code,description,unit,unit_price,labor_pct,material_pct,min_charge,notes
+DW-PATCH,Patch drywall and texture,sf,3.50,0.7,0.3,150.00,Match existing texture
+PRIME-PAINT,Prime and paint repaired area (2 coats),sf,1.80,0.7,0.3,0.00,Standard interior latex
+PAINT-WALLS,Paint walls (2 coats),sf,1.35,0.65,0.35,250.00,Includes prep & cleanup
+BASEBOARD-RR,Replace baseboard,lf,5.25,0.7,0.3,150.00,4 inch MDF baseboard
+DEHU-DAY,Dehumidifier (per day),ea,45.00,1.0,0.0,0.00,Mitigation
+AIRMOVER-DAY,Air mover (per day),ea,18.00,1.0,0.0,0.00,Mitigation

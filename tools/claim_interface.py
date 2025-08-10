@@ -1,0 +1,75 @@
+from flask import Flask, request, render_template, redirect, url_for, send_file
+import os
+import uuid
+import pandas as pd                         # NEW – DataFrame handling
+from pathlib import Path                    # NEW – convenient path joinsAPP_ROOT = Path(__file__).resolve().parent.parent
+DATA_DIR = APP_ROOT / "data"
+TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
+
+# --- Flask app (point to the templates folder inside tools/) ---
+app = Flask(__name__, template_folder=str(TEMPLATES_DIR))
+
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+@app.route("/new_claim", methods=["GET", "POST"])
+def new_claim():
+    if request.method == "POST":
+        job_id = (request.form.get("job_id") or "").strip()
+        if not job_id:
+            return "Job ID required", 400
+
+        # Folder structure
+        base = DATA_DIR / job_id
+        ig_dir = base / "iguide"
+        photos_dir = base / "photos"
+        base.mkdir(parents=True, exist_ok=True)
+        ig_dir.mkdir(parents=True, exist_ok=True)
+        photos_dir.mkdir(parents=True, exist_ok=True)
+
+        # Files from form (keep your existing field names from new_claim.html)
+        policy = request.files.get("policy")
+        floorplan = request.files.get("floorplan")
+        xml = request.files.get("xml")
+        photos = request.files.getlist("photos")
+
+        # Save uploads
+        if policy and policy.filename:
+            (base / "policy.pdf").write_bytes(policy.read())
+        if floorplan and floorplan.filename:
+            (ig_dir / floorplan.filename).write_bytes(floorplan.read())
+        if xml and xml.filename:
+            (ig_dir / xml.filename).write_bytes(xml.read())
+        for p in photos:
+            if p and p.filename:
+                (photos_dir / p.filename).write_bytes(p.read())
+
+        # --- Auto-run your pipeline and show logs ---
+        try:
+            result = subprocess.run(
+                ["python3", str(APP_ROOT / "run_pipeline.py"), job_id],
+                capture_output=True,
+                text=True,
+                check=False
+            )
+            stdout = result.stdout or ""
+            stderr = result.stderr or ""
+        except Exception as e:
+            stdout, stderr = "", f"Error running pipeline: {e}"
+
+        return f"""
+        <h2>✅ Claim {job_id} uploaded & processed</h2>
+        <p>Outputs are in <code>out/</code>. Job data saved under <code>data/{job_id}/</code>.</p>
+        <h3>Pipeline Output</h3>
+        <pre style="background:#0b1022;color:#e9f1ff;padding:14px;border-radius:8px;overflow:auto;max-height:60vh;">{stdout}</pre>
+        {f"<h3 style='color:#b00;'>Errors</h3><pre style='background:#2a0d0d;color:#ffd6d6;padding:14px;border-radius:8px;overflow:auto;max-height:40vh;'>{stderr}</pre>" if stderr.strip() else ""}
+        <p><a href="/">Back to Home</a></p>
+        """
+
+    # GET: render your existing upload form page
+    return render_template("new_claim.html")
+
+if __name__ == "__main__":
+    print("🚀 Claim Interface running at http://127.0.0.1:5002")
+    app.run(host="127.0.0.1", port=5002, debug=True)

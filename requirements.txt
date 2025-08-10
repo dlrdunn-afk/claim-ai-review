@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+streamlit
+pydantic
+pandas
+numpy
+opencv-python
+pyyaml
+shapely
+ezdxf
+reportlab
+pymupdf
+
