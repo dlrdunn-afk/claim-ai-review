@@ -1,0 +1,17 @@
+Running: python3 iguide/export_room_data.py --job data/job-smoke-001
+✅ Room data exported to: /Users/daviddunn/Library/Mobile Documents/com~apple~CloudDocs/claim-ai/out/--job_room_data.csv
+Running: python3 estimate/generate_room_estimates.py --job data/job-smoke-001
+✅ Loaded 3 rooms from --job_room_data.csv
+✅ Generated estimate using room data → /Users/daviddunn/Library/Mobile Documents/com~apple~CloudDocs/claim-ai/out/estimate_xact.csv
+Running: python3 estimate/add_justifications.py --job data/job-smoke-001
+✅ Justified estimate saved to: out/estimate_xact_with_notes.csv
+📦 Rows: 9
+Running: python3 estimate/merge_room_and_estimate.py --job data/job-smoke-001
+✅ Merged estimate saved to: out/estimate_xact_merged.csv
+Running: python3 estimate/apply_policy_rules.py --job data/job-smoke-001
+🔊 apply_policy_rules.py: starting…
+✅ Final policy-aware estimate: out/estimate_xact_final.csv (9 lines)
+✅ No lines removed by policy rules.
+Running: python3 estimate/export_xactimate_csv.py --job data/job-smoke-001
+✅ Exported for Xactimate: /Users/daviddunn/Library/Mobile Documents/com~apple~CloudDocs/claim-ai/out/estimate_xact_import.csv  (rows: 9)
+All steps complete for data/job-smoke-001. Check the /out folder.
