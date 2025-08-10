@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Existing Claims</title>
+    <style>
+        body {font-family: Arial, sans-serif; margin: 2rem;}
+        ul {list-style: none; padding: 0;}
+        li {margin: 0.5rem 0;}
+        a {text-decoration: none; color: #0066cc;}
+        a:hover {text-decoration: underline;}
+    </style>
+</head>
+<body>
+    <h1>Existing Claims</h1>
+    {% if jobs %}
+        <ul>
+        {% for job in jobs %}
+            <li>
+                <a href="{{ url_for('review_rooms', job_id=job) }}">{{ job }}</a>
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No claims have been uploaded yet.</p>
+    {% endif %}
+    <p><a href="{{ url_for('home') }}">← Back to Home</a></p>
+</body>
+</html>
+

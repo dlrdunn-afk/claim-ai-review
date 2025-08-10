@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CLAIM‑AI – Home</title>
+    <style>
+        body {font-family: Arial, sans-serif; margin: 2rem; text-align: center;}
+        .btn {display: inline-block; padding: 1rem 2rem; margin: 1rem;
+               background: #2c7; color: white; text-decoration: none; border-radius: 4px;}
+        .btn:hover {background: #2a6;}
+    </style>
+</head>
+<body>
+    <h1>CLAIM‑AI – Choose an Action</h1>
+    <a href="{{ url_for('new_claim') }}" class="btn">New Claim</a>
+    <a href="{{ url_for('existing_claim') }}" class="btn">Existing Claim</a>
+</body>
+</html>
+
