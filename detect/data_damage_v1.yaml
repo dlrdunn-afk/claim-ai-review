@@ -1,0 +1,9 @@
+path: data/datasets/damage-v1
+train: images/train
+val: images/val
+names:
+  0: waterline
+  1: buckled_floor
+  2: baseboard_swelling
+  3: drywall_cutline
+  4: mold_visible

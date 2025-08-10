@@ -7,12 +7,18 @@ Running: python3 estimate/add_justifications.py --job data/job-smoke-001
 ✅ Justified estimate saved to: out/estimate_xact_with_notes.csv
 📦 Rows: 9
 Running: python3 estimate/merge_room_and_estimate.py --job data/job-smoke-001
-✅ Merged estimate saved to: out/estimate_xact_merged.csv
+❌ Missing room data file: out/job-0001_room_data.csv
 Running: python3 estimate/apply_policy_rules.py --job data/job-smoke-001
 🔊 apply_policy_rules.py: starting…
-✅ Final policy-aware estimate: out/estimate_xact_final.csv (9 lines)
-✅ No lines removed by policy rules.
-Running: python3 estimate/export_xactimate_csv.py --job data/job-smoke-001
-✅ Exported for Xactimate: /Users/daviddunn/Library/Mobile Documents/com~apple~CloudDocs/claim-ai/out/estimate_xact_import.csv  (rows: 9)
-Collected 10 files into out/job-smoke-001
-All steps complete for data/job-smoke-001. See out/job-smoke-001/
+❌ Missing merged estimate: out/estimate_xact_merged.csv
+Traceback (most recent call last):
+  File "/Users/daviddunn/Library/Mobile Documents/com~apple~CloudDocs/claim-ai/run_pipeline.py", line 17, in <module>
+    run_step("estimate/apply_policy_rules.py")
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/daviddunn/Library/Mobile Documents/com~apple~CloudDocs/claim-ai/run_pipeline.py", line 11, in run_step
+    subprocess.run(cmd, check=True)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/subprocess.py", line 577, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['python3', 'estimate/apply_policy_rules.py', '--job', 'data/job-smoke-001']' returned non-zero exit status 1.
