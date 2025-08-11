@@ -1,0 +1,189 @@
+from __future__ import annotations
+import sys
+from pathlib import Path as _P
+ROOT = _P(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path: sys.path.insert(0, str(ROOT))
+from tools.scraper_blueprint import scraperbp, CLAIM_CAUSES
+import sys
+from pathlib import Path as _P
+ROOT = _P(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path: sys.path.insert(0, str(ROOT))
+from tools.chat_widget import chatbp
+import csv, os, time
+from pathlib import Path
+from flask import Flask, request, redirect, url_for, render_template_string, send_from_directory, jsonify
+
+app = Flask(__name__)
+app.register_blueprint(scraperbp)
+app.register_blueprint(chatbp)
+REPO_ROOT = Path(__file__).resolve().parents[1]
+INBOX = REPO_ROOT / "data" / "label_inbox"
+DONE  = REPO_ROOT / "data" / "label_done"
+SKIP  = REPO_ROOT / "data" / "label_skip"
+CSV_PATH = REPO_ROOT / "data" / "labels.csv"
+
+# Edit this list to fit your damage types
+LABELS = CLAIM_CAUSES
+INBOX.mkdir(parents=True, exist_ok=True)
+DONE.mkdir(parents=True, exist_ok=True)
+SKIP.mkdir(parents=True, exist_ok=True)
+if not CSV_PATH.exists():
+    with CSV_PATH.open("w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
+        w.writerow(["timestamp","image_relpath","pred_label","pred_conf","confirmed_label","notes"])
+
+def list_images(folder: Path):
+    exts = {".jpg",".jpeg",".png",".webp",".bmp",".tif",".tiff"}
+    return sorted([p for p in folder.iterdir() if p.suffix.lower() in exts], key=lambda p: p.name)
+
+def dumb_predict(img_path: Path):
+    # Placeholder "AI": guesses based on filename; swap with a real model later.
+    lowname = img_path.name.lower()
+    for k in LABELS:
+        if k != "unknown" and k in lowname:
+            return k, 0.80
+    return "unknown", 0.35
+
+TEMPLATE = """
+<!doctype html>
+<title>Damage Labeler</title>
+<style>
+body{font-family:system-ui,Arial,sans-serif;max-width:980px;margin:24px auto;padding:0 12px}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.card{border:1px solid #eee;padding:16px;border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+img{max-width:100%;height:auto;border-radius:10px;border:1px solid #ddd}
+label{display:inline-block;margin:6px 8px 6px 0}
+select,input[type=text]{padding:8px 10px;border-radius:10px;border:1px solid #ccc}
+button{padding:8px 14px;border-radius:12px;border:1px solid #bbb;background:#fafafa;cursor:pointer}
+#topbar a{margin-left:10px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:980px){.grid{grid-template-columns:1fr}}
+small{color:#666}
+</style>
+<header>
+  <h2>Damage Labeler</h2>
+  <div id="topbar">
+    <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data" style="display:inline">
+      <input type="file" name="photos" multiple>
+      <button type="submit">Upload</button>
+    </form>
+    <a href="{{ url_for('stats') }}" target="_blank">Stats (JSON)</a>
+    <a href="{{ url_for('scraperbp.scrape_ui') }}" target="_blank">Scrape</a>
+    <a href="{{ url_for('chatbp.chat_ui') }}" target="_blank">Chat</a>
+  </div>
+</header>
+
+<div class="card">
+  {% if img_rel %}
+  <div class="grid">
+    <div>
+      <img src="{{ url_for('serve_inbox', filename=img_name) }}" alt="photo">
+      <p><small>{{ img_name }}</small></p>
+    </div>
+    <div>
+      <p><b>Prediction:</b> {{ pred_label }} ({{ '%.2f' % pred_conf }})</p>
+      <form action="{{ url_for('label') }}" method="post">
+        <input type="hidden" name="img" value="{{ img_name }}">
+        <label>Peril (photo-level):
+          <select name="label">
+            {% for l in labels %}
+              <option value="{{ l }}" {% if l==pred_label %}selected{% endif %}>{{ l }}</option>
+            {% endfor %}
+          </select>
+        </label><br><br>
+        <label>Notes: <input type="text" name="notes" placeholder="optional notes" style="width:100%"></label><br><br>
+        <button type="submit">Save label</button>
+        <button type="submit" name="action" value="skip">Skip</button>
+      </form>
+      <p style="margin-top:12px;"><a href="{{ url_for('next_image') }}">Next image</a></p>
+      <p><small>Inbox: {{ inbox_count }} | Done: {{ done_count }} | Skipped: {{ skip_count }}</small></p>
+    </div>
+  </div>
+  {% else %}
+    <p>No images in inbox. Use the Upload button above or drop files into <code>data/label_inbox</code>.</p>
+  {% endif %}
+</div>
+"""
+
+@app.route("/")
+def next_image():
+    imgs = list_images(INBOX)
+    img_rel = None; img_name = None; pred_label = "unknown"; pred_conf = 0.0
+    if imgs:
+        img_rel = imgs[0].relative_to(INBOX)
+        img_name = imgs[0].name
+        pred_label, pred_conf = dumb_predict(imgs[0])
+    return render_template_string(
+        TEMPLATE,
+        img_rel=str(img_rel) if img_rel else None,
+        img_name=img_name,
+        pred_label=pred_label,
+        pred_conf=pred_conf,
+        labels=LABELS,
+        inbox_count=len(list_images(INBOX)),
+        done_count=len(list_images(DONE)),
+        skip_count=len(list_images(SKIP)),
+    )
+
+@app.route("/upload", methods=["POST"])
+def upload():
+    files = request.files.getlist("photos")
+    for f in files:
+        if not f.filename: continue
+        dest = INBOX / Path(f.filename).name
+        base, ext = os.path.splitext(dest.name)
+        i = 1
+        while dest.exists():
+            dest = INBOX / f"{base}_{i}{ext}"; i += 1
+        f.save(dest)
+    return redirect(url_for("next_image"))
+
+@app.route("/inbox/<path:filename>")
+def serve_inbox(filename):
+    return send_from_directory(INBOX, filename)
+
+@app.route("/label", methods=["POST"])
+def label():
+    img_name = request.form.get("img")
+    if not img_name: return redirect(url_for("next_image"))
+    img_path = INBOX / img_name
+    if not img_path.exists(): return redirect(url_for("next_image"))
+    action = request.form.get("action","save")
+
+    pred_label, pred_conf = dumb_predict(img_path)
+    confirmed = request.form.get("label","unknown").strip()
+    notes = request.form.get("notes","").strip()
+
+    with CSV_PATH.open("a", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
+        w.writerow([int(time.time()), str(img_path.relative_to(REPO_ROOT)),
+                    pred_label, f"{pred_conf:.3f}", confirmed, notes])
+
+    target_dir = SKIP if action == "skip" else DONE
+    target = target_dir / img_path.name
+    i = 1
+    while target.exists():
+        stem, ext = os.path.splitext(img_path.name)
+        target = target_dir / f"{stem}_{i}{ext}"; i += 1
+    img_path.rename(target)
+    return redirect(url_for("next_image"))
+
+@app.route("/stats")
+def stats():
+    counts = {}
+    if CSV_PATH.exists():
+        with CSV_PATH.open("r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                c = row.get("confirmed_label","unknown") or "unknown"
+                counts[c] = counts.get(c,0) + 1
+    return jsonify({
+        "inbox": len(list_images(INBOX)),
+        "done": len(list_images(DONE)),
+        "skip": len(list_images(SKIP)),
+        "counts": counts,
+        "labels": LABELS
+    })
+
+if __name__ == "__main__":
+    app.run(host="127.0.0.1", port=5004, debug=True)
