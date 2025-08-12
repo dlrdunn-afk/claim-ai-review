@@ -148,7 +148,7 @@ small{color:#666}
     </div>
     <br>
     <button type="submit">Start scraping</button>
-    <a href="{{ url_for('next_image') }}" style="margin-left:12px">Back to Labeler</a>
+    <a href="{{ url_for('.next_image') }}" style="margin-left:12px">Back to Labeler</a>
     <p><small>Images save to <code>data/label_inbox/</code> as JPG. You can label them immediately.</small></p>
   </form>
 
@@ -156,7 +156,7 @@ small{color:#666}
     <hr>
     <p><b>Scraping '{{ query }}' ...</b></p>
     <p>Saved: {{ saved }} / Errors: {{ errors }}</p>
-    <p><a href="{{ url_for('next_image') }}">Open Labeler</a></p>
+    <p><a href="{{ url_for('.next_image') }}">Open Labeler</a></p>
   {% endif %}
 </div>
 """
