@@ -1,0 +1,25 @@
+
+🔹 Running: python3 /Users/daviddunn/Library/Mobile Documents/com~apple~CloudDocs/claim-ai/iguide/export_room_data.py --job
+✅ Room data exported to: /Users/daviddunn/Library/Mobile Documents/com~apple~CloudDocs/claim-ai/out/--job_room_data.csv
+✅ Done: iguide/export_room_data.py
+
+🔹 Running: python3 /Users/daviddunn/Library/Mobile Documents/com~apple~CloudDocs/claim-ai/estimate/generate_room_estimates.py --job
+✅ Loaded 3 rooms from --job_room_data.csv
+✅ Generated estimate using room data → /Users/daviddunn/Library/Mobile Documents/com~apple~CloudDocs/claim-ai/out/estimate_xact.csv
+✅ Done: estimate/generate_room_estimates.py
+
+🔹 Running: python3 /Users/daviddunn/Library/Mobile Documents/com~apple~CloudDocs/claim-ai/estimate/add_justifications.py --job
+✅ Justified estimate saved to: out/estimate_xact_with_notes.csv
+📦 Rows: 9
+✅ Done: estimate/add_justifications.py
+
+🔹 Running: python3 /Users/daviddunn/Library/Mobile Documents/com~apple~CloudDocs/claim-ai/estimate/merge_room_and_estimate.py --job
+❌ Missing room data file: out/job-0001_room_data.csv
+✅ Done: estimate/merge_room_and_estimate.py
+
+🔹 Running: python3 /Users/daviddunn/Library/Mobile Documents/com~apple~CloudDocs/claim-ai/estimate/apply_policy_rules.py --job
+🔊 apply_policy_rules.py: starting…
+❌ Missing merged estimate: out/estimate_xact_merged.csv
+❌ Step failed: python3 /Users/daviddunn/Library/Mobile Documents/com~apple~CloudDocs/claim-ai/estimate/apply_policy_rules.py
+
+⛔ Pipeline stopped due to error above.
