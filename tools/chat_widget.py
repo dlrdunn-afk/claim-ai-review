@@ -1,12 +1,18 @@
 from __future__ import annotations
-import os, json, textwrap, time
-from typing import List, Dict, Any
-from flask import Blueprint, request, jsonify, Response
+
+import json
+import os
+import textwrap
+import time
+from typing import Any, Dict, List
+
+from flask import Blueprint, Response, jsonify, request
 
 # --- Optional OpenAI (Responses API) ---
 OPENAI_OK = False
 try:
     from openai import OpenAI
+
     _client = OpenAI()
     OPENAI_OK = bool(os.getenv("OPENAI_API_KEY"))
 except Exception:
@@ -17,6 +23,7 @@ except Exception:
 SEARCH_OK = False
 try:
     from ddgs import DDGS
+
     SEARCH_OK = True
 except Exception:
     DDGS = None
@@ -27,6 +34,7 @@ DEFAULT_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 TIME_BUDGET_MS = 2500
 MAX_RESULTS = 3
 
+
 def web_search(query: str, max_results: int = MAX_RESULTS) -> List[Dict[str, Any]]:
     if not SEARCH_OK:
         return []
@@ -34,24 +42,30 @@ def web_search(query: str, max_results: int = MAX_RESULTS) -> List[Dict[str, Any
     start = time.time()
     with DDGS() as ddgs:
         for r in ddgs.text(query, max_results=max_results):
-            results.append({
-                "title": r.get("title"),
-                "url": r.get("href"),
-                "snippet": r.get("body"),
-            })
+            results.append(
+                {
+                    "title": r.get("title"),
+                    "url": r.get("href"),
+                    "snippet": r.get("body"),
+                }
+            )
             # time-box the loop
             if (time.time() - start) * 1000 > TIME_BUDGET_MS:
                 break
     return results
+
 
 def render_search_context(results: List[Dict[str, Any]]) -> str:
     if not results:
         return "No web results."
     lines = ["Web search results:"]
     for i, r in enumerate(results, 1):
-        lines.append(f"[{i}] {r.get('title') or '(no title)'}\nURL: {r.get('url') or ''}\n{r.get('snippet') or ''}")
+        lines.append(
+            f"[{i}] {r.get('title') or '(no title)'}\nURL: {r.get('url') or ''}\n{r.get('snippet') or ''}"
+        )
     out = "\n\n".join(lines)
     return out[:2000]
+
 
 def call_llm(prompt: str) -> str:
     if OPENAI_OK and _client:
@@ -60,7 +74,10 @@ def call_llm(prompt: str) -> str:
             return (resp.output_text or "").strip()
         except Exception:
             return json.dumps(resp.model_dump(), indent=2)[:3000]
-    return "AI offline (no OPENAI_API_KEY). Prompt echo:\n\n" + textwrap.shorten(prompt, 1500)
+    return "AI offline (no OPENAI_API_KEY). Prompt echo:\n\n" + textwrap.shorten(
+        prompt, 1500
+    )
+
 
 @chatbp.route("/chat", methods=["POST"])
 def chat_api():
@@ -70,12 +87,18 @@ def chat_api():
     if not msg:
         return jsonify({"error": "message required"}), 400
     search_results = web_search(msg) if use_web else []
-    prefix = render_search_context(search_results) + "\n\nTask: Using the above when relevant, answer succinctly.\n\n" if use_web else ""
+    prefix = (
+        render_search_context(search_results)
+        + "\n\nTask: Using the above when relevant, answer succinctly.\n\n"
+        if use_web
+        else ""
+    )
     reply = call_llm(prefix + msg)
     out = {"reply": reply, "used_web": use_web}
     if search_results:
         out["sources"] = search_results
     return jsonify(out)
+
 
 @chatbp.route("/chat-ui")
 def chat_ui():

@@ -2,6 +2,7 @@ import os
 import shutil
 import zipfile
 
+
 def detect_file_type(filepath):
     with open(filepath, "rb") as f:
         content = f.read(5120).decode("utf-8", errors="ignore").lower()
@@ -13,6 +14,7 @@ def detect_file_type(filepath):
     if "xactimate" in content or "lineitem" in content:
         return "estimate"
     return "unknown"
+
 
 def import_esx(esx_path, output_base):
     if not os.path.exists(esx_path):
@@ -66,9 +68,9 @@ def import_esx(esx_path, output_base):
 
     print("✅ ESX import complete.")
 
+
 # === Run it ===
 if __name__ == "__main__":
     esx_file = "data/job-0001/sarena_irwin.esx"
     output_folder = "data/job-0001"
     import_esx(esx_file, output_folder)
-

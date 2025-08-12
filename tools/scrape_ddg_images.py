@@ -1,13 +1,18 @@
 from __future__ import annotations
-import os, time, hashlib, random, sys
+
+import hashlib
+import os
+import random
+import sys
+import time
+from io import BytesIO
 from pathlib import Path
 from urllib.parse import urlparse
-import requests
-from PIL import Image
-from io import BytesIO
 
+import requests
 # DuckDuckGo (new package)
 from ddgs import DDGS
+from PIL import Image
 
 SEARCH_TERM = "mold damage insurance claim"
 NUM_IMAGES = 50
@@ -22,20 +27,31 @@ UA_LIST = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:127.0) Gecko/20100101 Firefox/127.0",
 ]
 
+
 def rand_headers():
-    return {"User-Agent": random.choice(UA_LIST), "Accept": "*/*", "Accept-Language": "en-US,en;q=0.9"}
+    return {
+        "User-Agent": random.choice(UA_LIST),
+        "Accept": "*/*",
+        "Accept-Language": "en-US,en;q=0.9",
+    }
+
 
 def choose_ext(ct: str, url_path: str) -> str:
-    if ct.startswith("image/jpeg"): return ".jpg"
-    if ct.startswith("image/png"): return ".png"
-    if ct.startswith("image/webp"): return ".webp"
+    if ct.startswith("image/jpeg"):
+        return ".jpg"
+    if ct.startswith("image/png"):
+        return ".png"
+    if ct.startswith("image/webp"):
+        return ".webp"
     # fallback from URL path
     ext = os.path.splitext(url_path)[1].lower()
-    return ext if ext in {".jpg",".jpeg",".png",".webp"} else ".jpg"
+    return ext if ext in {".jpg", ".jpeg", ".png", ".webp"} else ".jpg"
+
 
 def dedupe_name(url: str, ext: str) -> str:
     h = hashlib.sha1(url.encode("utf-8")).hexdigest()[:12]
     return f"mold_{h}{ext}"
+
 
 def fetch_bytes(url: str) -> bytes | None:
     try:
@@ -48,6 +64,7 @@ def fetch_bytes(url: str) -> bytes | None:
         return content
     except Exception:
         return None
+
 
 def verify_and_save(img_bytes: bytes, dest: Path) -> bool:
     try:
@@ -62,6 +79,7 @@ def verify_and_save(img_bytes: bytes, dest: Path) -> bool:
     except Exception:
         return False
 
+
 def search_ddg(q: str, n: int) -> list[dict]:
     # use generator + brief sleep to avoid rate-limits
     out = []
@@ -70,6 +88,7 @@ def search_ddg(q: str, n: int) -> list[dict]:
             out.append(res)
             time.sleep(0.05)  # gentle
     return out
+
 
 def main():
     query = sys.argv[1] if len(sys.argv) > 1 else SEARCH_TERM
@@ -84,9 +103,10 @@ def main():
     errors = 0
     seen = set()
     for r in results:
-        if ok >= target or errors >= MAX_ERRORS: break
+        if ok >= target or errors >= MAX_ERRORS:
+            break
         url = r.get("image") or r.get("url") or r.get("thumbnail")
-        if not url or url in seen: 
+        if not url or url in seen:
             continue
         seen.add(url)
 
@@ -112,6 +132,7 @@ def main():
         time.sleep(random.uniform(SLEEP_MIN, SLEEP_MAX))  # be polite
 
     print(f"\n🎯 Done. Saved {ok} images to {OUT_DIR} (errors: {errors}).")
+
 
 if __name__ == "__main__":
     main()

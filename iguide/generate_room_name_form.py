@@ -22,6 +22,7 @@ Notes:
 """
 
 from __future__ import annotations
+
 import argparse
 import csv
 import sys
@@ -113,9 +114,18 @@ def write_form_csv(out_path: Path, rooms: list[str]) -> None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Generate room-name + dimensions form CSV.")
-    parser.add_argument("--job", required=True, help="Path to job folder (e.g., data/job-0001)")
-    parser.add_argument("--mode", default="form", choices=["form"], help="Operation mode (default: form)")
+    parser = argparse.ArgumentParser(
+        description="Generate room-name + dimensions form CSV."
+    )
+    parser.add_argument(
+        "--job", required=True, help="Path to job folder (e.g., data/job-0001)"
+    )
+    parser.add_argument(
+        "--mode",
+        default="form",
+        choices=["form"],
+        help="Operation mode (default: form)",
+    )
     parser.add_argument(
         "--rooms",
         default=None,

@@ -1,4 +1,5 @@
-import sys, csv
+import csv
+import sys
 from pathlib import Path
 
 """
@@ -12,10 +13,11 @@ OUTPUT: out/estimate_xact.csv
 
 FIELDS_OUT = ["Room", "Line Item Code", "Description", "Quantity/Length"]
 
+
 def load_rooms(app_root, job_id):
     out = app_root / "out"
     merged = out / f"{job_id}_room_data_merged.csv"
-    base   = out / f"{job_id}_room_data.csv"
+    base = out / f"{job_id}_room_data.csv"
 
     src = None
     if merged.exists():
@@ -23,7 +25,9 @@ def load_rooms(app_root, job_id):
     elif base.exists():
         src = base
     else:
-        print(f"❌ No room data CSV found for {job_id}. Looked for:\n - {merged}\n - {base}")
+        print(
+            f"❌ No room data CSV found for {job_id}. Looked for:\n - {merged}\n - {base}"
+        )
         return []
 
     rooms = []
@@ -37,6 +41,7 @@ def load_rooms(app_root, job_id):
             rooms.append({"Room": name})
     print(f"✅ Loaded {len(rooms)} rooms from {src.name}")
     return rooms
+
 
 def main():
     job_id = sys.argv[1] if len(sys.argv) > 1 else "job-0001"
@@ -57,9 +62,30 @@ def main():
     for r in rooms:
         room = r["Room"]
         # Add a few sample items — adjust to your logic
-        estimates.append({"Room": room, "Line Item Code": "DRYBD",  "Description": "Drywall base prep (LF)",       "Quantity/Length": 10})
-        estimates.append({"Room": room, "Line Item Code": "FLRPLS", "Description": "Flooring - replace (SF)",      "Quantity/Length": 50})
-        estimates.append({"Room": room, "Line Item Code": "PNTINT", "Description": "Paint interior walls (SF)",    "Quantity/Length": 50})
+        estimates.append(
+            {
+                "Room": room,
+                "Line Item Code": "DRYBD",
+                "Description": "Drywall base prep (LF)",
+                "Quantity/Length": 10,
+            }
+        )
+        estimates.append(
+            {
+                "Room": room,
+                "Line Item Code": "FLRPLS",
+                "Description": "Flooring - replace (SF)",
+                "Quantity/Length": 50,
+            }
+        )
+        estimates.append(
+            {
+                "Room": room,
+                "Line Item Code": "PNTINT",
+                "Description": "Paint interior walls (SF)",
+                "Quantity/Length": 50,
+            }
+        )
 
     with out_csv.open("w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=FIELDS_OUT)
@@ -67,6 +93,7 @@ def main():
         w.writerows(estimates)
 
     print(f"✅ Generated estimate using room data → {out_csv}")
+
 
 if __name__ == "__main__":
     main()

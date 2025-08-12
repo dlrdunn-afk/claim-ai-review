@@ -1,6 +1,7 @@
-from flask import Flask, request, render_template_string
-from pathlib import Path
 import subprocess
+from pathlib import Path
+
+from flask import Flask, render_template_string, request
 
 app = Flask(__name__)
 APP_ROOT = Path(__file__).resolve().parent.parent
@@ -49,6 +50,7 @@ HTML = """
 </html>
 """
 
+
 @app.route("/", methods=["GET", "POST"])
 def upload():
     if request.method == "POST":
@@ -85,7 +87,7 @@ def upload():
                 ["python3", str(APP_ROOT / "run_pipeline.py"), job_id],
                 capture_output=True,
                 text=True,
-                check=False
+                check=False,
             )
             stdout = result.stdout or ""
             stderr = result.stderr or ""
@@ -102,6 +104,7 @@ def upload():
         """
 
     return render_template_string(HTML)
+
 
 if __name__ == "__main__":
     print("🚀 Uploader running at http://127.0.0.1:5001")

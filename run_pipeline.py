@@ -1,4 +1,5 @@
-import sys, subprocess
+import subprocess
+import sys
 from pathlib import Path
 
 APP_ROOT = Path(__file__).resolve().parent
@@ -12,10 +13,13 @@ STEPS = [
     ["python3", str(APP_ROOT / "estimate" / "export_xactimate_csv.py")],
 ]
 
+
 def run_step(cmd, job_id):
     print(f"\n🔹 Running: {' '.join(cmd)} {job_id}")
     try:
-        result = subprocess.run(cmd + [job_id], capture_output=True, text=True, check=False)
+        result = subprocess.run(
+            cmd + [job_id], capture_output=True, text=True, check=False
+        )
         if result.stdout:
             print(result.stdout.rstrip())
         if result.returncode != 0:
@@ -29,6 +33,7 @@ def run_step(cmd, job_id):
         print(f"❌ Exception running {' '.join(cmd)}: {e}")
         return False
 
+
 def main():
     job_id = sys.argv[1] if len(sys.argv) > 1 else "job-0001"
     for cmd in STEPS:
@@ -38,6 +43,7 @@ def main():
             break
     else:
         print("\n🎉 All steps complete for", job_id, ". Check the /out folder.")
+
 
 if __name__ == "__main__":
     main()

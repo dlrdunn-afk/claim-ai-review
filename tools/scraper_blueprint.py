@@ -1,11 +1,17 @@
 from __future__ import annotations
-import os, time, random, hashlib
-from pathlib import Path
+
+import hashlib
+import os
+import random
+import time
 from io import BytesIO
-from typing import List, Dict, Any
+from pathlib import Path
+from typing import Any, Dict, List
 from urllib.parse import urlparse
-from flask import Blueprint, request, redirect, url_for, render_template_string, flash
+
 import requests
+from flask import (Blueprint, flash, redirect, render_template_string, request,
+                   url_for)
 from PIL import Image
 
 # DDG search (new package)
@@ -23,10 +29,27 @@ INBOX.mkdir(parents=True, exist_ok=True)
 
 # Keep peril list aligned with your app
 CLAIM_CAUSES = [
-    "hurricane", "windstorm", "hail", "flood", "mold", "fire", "lightning", "smoke", "explosion",
-    "riot_civil_commotion", "vandalism", "theft", "falling_object", "weight_of_ice_snow_sleet",
-    "volcanic_eruption", "sudden_accidental_water_discharge", "freezing", "electrical_surge",
-    "vehicle_impact", "aircraft_impact", "other"
+    "hurricane",
+    "windstorm",
+    "hail",
+    "flood",
+    "mold",
+    "fire",
+    "lightning",
+    "smoke",
+    "explosion",
+    "riot_civil_commotion",
+    "vandalism",
+    "theft",
+    "falling_object",
+    "weight_of_ice_snow_sleet",
+    "volcanic_eruption",
+    "sudden_accidental_water_discharge",
+    "freezing",
+    "electrical_surge",
+    "vehicle_impact",
+    "aircraft_impact",
+    "other",
 ]
 
 UA_LIST = [
@@ -35,6 +58,7 @@ UA_LIST = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:127.0) Gecko/20100101 Firefox/127.0",
 ]
 
+
 def set_current_cause(cause: str):
     cause = (cause or "other").strip().lower().replace(" ", "_")
     if cause not in CLAIM_CAUSES:
@@ -42,13 +66,21 @@ def set_current_cause(cause: str):
     CAUSE_PATH.write_text(cause, encoding="utf-8")
     return cause
 
-def _headers() -> Dict[str,str]:
+
+def _headers() -> Dict[str, str]:
     import random
-    return {"User-Agent": random.choice(UA_LIST), "Accept": "*/*", "Accept-Language": "en-US,en;q=0.9"}
+
+    return {
+        "User-Agent": random.choice(UA_LIST),
+        "Accept": "*/*",
+        "Accept-Language": "en-US,en;q=0.9",
+    }
+
 
 def _name_from_url(url: str, prefix: str) -> str:
     h = hashlib.sha1(url.encode("utf-8")).hexdigest()[:12]
     return f"{prefix}_{h}.jpg"
+
 
 def _download_and_save(url: str, dest: Path) -> bool:
     try:
@@ -65,17 +97,20 @@ def _download_and_save(url: str, dest: Path) -> bool:
     except Exception:
         return False
 
+
 def ddg_images(query: str, max_results: int) -> List[str]:
     """Return list of image URLs from DDG."""
     urls = []
-    if DDGS is None: 
+    if DDGS is None:
         return urls
     with DDGS() as ddgs:
         for res in ddgs.images(query, max_results=max_results):
             url = res.get("image") or res.get("url") or res.get("thumbnail")
-            if url: urls.append(url)
+            if url:
+                urls.append(url)
             time.sleep(0.05)  # be gentle
     return urls
+
 
 TEMPLATE = """
 <!doctype html>
@@ -126,16 +161,23 @@ small{color:#666}
 </div>
 """
 
-@scraperbp.route("/scrape", methods=["GET","POST"])
+
+@scraperbp.route("/scrape", methods=["GET", "POST"])
 def scrape_ui():
     started = False
     saved = errors = 0
-    current_cause = CAUSE_PATH.read_text(encoding="utf-8").strip() if CAUSE_PATH.exists() else "other"
+    current_cause = (
+        CAUSE_PATH.read_text(encoding="utf-8").strip()
+        if CAUSE_PATH.exists()
+        else "other"
+    )
 
     if request.method == "POST":
         cause = (request.form.get("cause") or "other").strip().lower()
         count = max(5, min(200, int(request.form.get("count") or 50)))
-        query = (request.form.get("query") or "").strip() or f"{cause} damage insurance claim"
+        query = (
+            request.form.get("query") or ""
+        ).strip() or f"{cause} damage insurance claim"
         if request.form.get("set_cause") == "1":
             current_cause = set_current_cause(cause)
         else:
@@ -143,33 +185,48 @@ def scrape_ui():
             current_cause = cause if cause in CLAIM_CAUSES else "other"
 
         # fetch URLs (overfetch to offset failures)
-        urls = ddg_images(query, max_results=count*3)
+        urls = ddg_images(query, max_results=count * 3)
         random.shuffle(urls)
         started = True
 
         seen = set()
         for url in urls:
-            if saved >= count: break
-            if url in seen: continue
+            if saved >= count:
+                break
+            if url in seen:
+                continue
             seen.add(url)
             name = _name_from_url(url, prefix=cause)
             dest = INBOX / name
-            if dest.exists(): 
+            if dest.exists():
                 continue
             if _download_and_save(url, dest):
                 saved += 1
                 time.sleep(random.uniform(0.6, 1.4))  # polite
             else:
                 errors += 1
-                if errors > 40: break  # bail if too many failures
+                if errors > 40:
+                    break  # bail if too many failures
 
-        return render_template_string(TEMPLATE,
-            causes=CLAIM_CAUSES, current_cause=current_cause,
+        return render_template_string(
+            TEMPLATE,
+            causes=CLAIM_CAUSES,
+            current_cause=current_cause,
             default_q=f"{cause} damage insurance claim",
-            started=True, saved=saved, errors=errors, query=query)
+            started=True,
+            saved=saved,
+            errors=errors,
+            query=query,
+        )
 
     # GET
-    return render_template_string(TEMPLATE,
-        causes=CLAIM_CAUSES, current_cause=current_cause,
+    return render_template_string(
+        TEMPLATE,
+        causes=CLAIM_CAUSES,
+        current_cause=current_cause,
         default_q="mold damage insurance claim",
-        started=False, saved=saved, errors=errors, query="")
+        started=False,
+        saved=saved,
+        errors=errors,
+        query="",
+    )

@@ -1,13 +1,14 @@
-import sys
-import os
 import csv
-import pytesseract
+import os
+import sys
+
 import cv2
 import numpy as np
+import pytesseract
 
-job_id = sys.argv[1] if len(sys.argv) > 1 else 'job-0001'
-image_path = f'out/bw_debug.jpg'  # Use the enhanced image
-output_csv = f'out/{job_id}_ocr_rooms.csv'
+job_id = sys.argv[1] if len(sys.argv) > 1 else "job-0001"
+image_path = f"out/bw_debug.jpg"  # Use the enhanced image
+output_csv = f"out/{job_id}_ocr_rooms.csv"
 
 # Load image
 img = cv2.imread(image_path)
@@ -22,16 +23,21 @@ detection = pytesseract.image_to_data(img, output_type=pytesseract.Output.DICT)
 
 # Collect room-related texts
 rows = []
-for i in range(len(detection['text'])):
-    text = detection['text'][i].strip()
+for i in range(len(detection["text"])):
+    text = detection["text"][i].strip()
     if text:
-        x, y, w, h = detection['left'][i], detection['top'][i], detection['width'][i], detection['height'][i]
+        x, y, w, h = (
+            detection["left"][i],
+            detection["top"][i],
+            detection["width"][i],
+            detection["height"][i],
+        )
         rows.append([text, x, y, w, h])
 
 # Save raw OCR results
-with open(output_csv, 'w', newline='') as f:
+with open(output_csv, "w", newline="") as f:
     writer = csv.writer(f)
-    writer.writerow(['Room Name', 'X', 'Y', 'Width', 'Height'])
+    writer.writerow(["Room Name", "X", "Y", "Width", "Height"])
     for row in rows:
         writer.writerow(row)
 

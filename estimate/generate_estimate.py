@@ -1,6 +1,6 @@
+import csv
 import json
 import os
-import csv
 
 job_id = "job-0001"
 job_dir = f"data/{job_id}"
@@ -18,7 +18,7 @@ with open(f"{job_dir}/policy_summary.json") as f:
 os.makedirs("out", exist_ok=True)
 csv_file = "out/estimate_xact.csv"
 
-with open(csv_file, mode='w', newline='') as file:
+with open(csv_file, mode="w", newline="") as file:
     writer = csv.writer(file)
 
     # Header format: Room, Line Item Code, Description, Quantity
@@ -31,7 +31,9 @@ with open(csv_file, mode='w', newline='') as file:
         height = metadata.get("flood_water_height_in", 0)
         if height > 0:
             writer.writerow(["Living Room", "DRYRM2", "Drywall removal up to 2ft", 120])
-            writer.writerow(["Kitchen", "CABLOW", "Clean and regrout lower cabinets", 10])
+            writer.writerow(
+                ["Kitchen", "CABLOW", "Clean and regrout lower cabinets", 10]
+            )
             writer.writerow(["Hallway", "BSBRD", "Baseboard removal & replacement", 40])
 
     # 🔹 Wind

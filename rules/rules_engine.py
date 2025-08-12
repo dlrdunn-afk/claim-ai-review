@@ -52,4 +52,3 @@ with open(output_path, "w") as f:
     json.dump(assumptions, f, indent=2)
 
 print(f"✅ Claim logic saved to: {output_path}")
-

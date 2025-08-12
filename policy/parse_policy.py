@@ -1,5 +1,6 @@
-import os
 import json
+import os
+
 import PyPDF2
 
 job_id = "job-0001"
@@ -15,8 +16,12 @@ with open(policy_path, "rb") as file:
 
 # Extract basic coverage terms
 summary = {
-    "ALE_coverage": "yes" if "additional living expense" in full_text.lower() else "unknown",
-    "ordinance_and_law": "yes" if "ordinance or law" in full_text.lower() else "unknown",
+    "ALE_coverage": (
+        "yes" if "additional living expense" in full_text.lower() else "unknown"
+    ),
+    "ordinance_and_law": (
+        "yes" if "ordinance or law" in full_text.lower() else "unknown"
+    ),
     "mold_limit_found": "yes" if "mold limit" in full_text.lower() else "unknown",
     "exclusions": [],
 }
