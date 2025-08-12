@@ -12,19 +12,21 @@ if not os.path.exists(manual_file):
     sys.exit(1)
 
 rows = []
-with open(manual_file, newline='') as f:
+with open(manual_file, newline="") as f:
     for row in csv.DictReader(f):
         try:
             name = row["Room Name"].strip().upper()
             width = float(row["Width (ft)"])
             length = float(row["Length (ft)"])
             area = round(width * length, 2)
-            rows.append({
-                "Room": name,
-                "Width (ft)": width,
-                "Length (ft)": length,
-                "Area (ft²)": area
-            })
+            rows.append(
+                {
+                    "Room": name,
+                    "Width (ft)": width,
+                    "Length (ft)": length,
+                    "Area (ft²)": area,
+                }
+            )
         except Exception as e:
             print(f"⚠️ Skipping row: {row} → {e}")
 
@@ -32,8 +34,10 @@ if not rows:
     print("❌ No valid rows imported. Please check your CSV.")
     sys.exit(1)
 
-with open(output_file, "w", newline='') as f:
-    writer = csv.DictWriter(f, fieldnames=["Room", "Width (ft)", "Length (ft)", "Area (ft²)"])
+with open(output_file, "w", newline="") as f:
+    writer = csv.DictWriter(
+        f, fieldnames=["Room", "Width (ft)", "Length (ft)", "Area (ft²)"]
+    )
     writer.writeheader()
     writer.writerows(rows)
 

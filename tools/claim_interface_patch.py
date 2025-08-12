@@ -1,5 +1,5 @@
-from pathlib import Path
 import fileinput
+from pathlib import Path
 
 target_file = Path("tools/claim_interface.py")
 

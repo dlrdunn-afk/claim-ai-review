@@ -30,15 +30,12 @@ for room in root.findall(".//SKETCHROOM"):
     label = room.find(".//SKETCHCDATACHILD")
     name = label.text.strip() if label is not None and label.text else "Unnamed"
 
-    rooms.append({
-        "id": room_id,
-        "name": name,
-        "ceiling": ceiling,
-        "walls": wall_ids
-    })
+    rooms.append({"id": room_id, "name": name, "ceiling": ceiling, "walls": wall_ids})
 
 # Display the parsed results
 print(f"\n🧾 Parsed {len(rooms)} rooms:\n")
 
 for r in rooms:
-    print(f"🏠 Room: {r['name']} | ID: {r['id']} | Ceiling: {r['ceiling']} | Walls: {r['walls']}")
+    print(
+        f"🏠 Room: {r['name']} | ID: {r['id']} | Ceiling: {r['ceiling']} | Walls: {r['walls']}"
+    )

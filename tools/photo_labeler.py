@@ -1,25 +1,36 @@
 from __future__ import annotations
+
 import sys
 from pathlib import Path as _P
+
 ROOT = _P(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path: sys.path.insert(0, str(ROOT))
-from tools.scraper_blueprint import scraperbp, CLAIM_CAUSES, CLAIM_CAUSES
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 import sys
 from pathlib import Path as _P
+
+from tools.scraper_blueprint import CLAIM_CAUSES, scraperbp
+
 ROOT = _P(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path: sys.path.insert(0, str(ROOT))
-from tools.chat_widget import chatbp
-import csv, os, time
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+import csv
+import os
+import time
 from pathlib import Path
-from flask import Flask, request, redirect, url_for, render_template_string, send_from_directory, jsonify
+
+from flask import (Flask, jsonify, redirect, render_template_string, request,
+                   send_from_directory, url_for)
+
+from tools.chat_widget import chatbp
 
 app = Flask(__name__)
 app.register_blueprint(scraperbp)
 app.register_blueprint(chatbp)
 REPO_ROOT = Path(__file__).resolve().parents[1]
 INBOX = REPO_ROOT / "data" / "label_inbox"
-DONE  = REPO_ROOT / "data" / "label_done"
-SKIP  = REPO_ROOT / "data" / "label_skip"
+DONE = REPO_ROOT / "data" / "label_done"
+SKIP = REPO_ROOT / "data" / "label_skip"
 CSV_PATH = REPO_ROOT / "data" / "labels.csv"
 
 # Edit this list to fit your damage types
@@ -30,11 +41,24 @@ SKIP.mkdir(parents=True, exist_ok=True)
 if not CSV_PATH.exists():
     with CSV_PATH.open("w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
-        w.writerow(["timestamp","image_relpath","pred_label","pred_conf","confirmed_label","notes"])
+        w.writerow(
+            [
+                "timestamp",
+                "image_relpath",
+                "pred_label",
+                "pred_conf",
+                "confirmed_label",
+                "notes",
+            ]
+        )
+
 
 def list_images(folder: Path):
-    exts = {".jpg",".jpeg",".png",".webp",".bmp",".tif",".tiff"}
-    return sorted([p for p in folder.iterdir() if p.suffix.lower() in exts], key=lambda p: p.name)
+    exts = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tif", ".tiff"}
+    return sorted(
+        [p for p in folder.iterdir() if p.suffix.lower() in exts], key=lambda p: p.name
+    )
+
 
 def dumb_predict(img_path: Path):
     # Placeholder "AI": guesses based on filename; swap with a real model later.
@@ -43,6 +67,7 @@ def dumb_predict(img_path: Path):
         if k != "unknown" and k in lowname:
             return k, 0.80
     return "unknown", 0.35
+
 
 TEMPLATE = """
 <!doctype html>
@@ -105,10 +130,14 @@ small{color:#666}
 </div>
 """
 
+
 @app.route("/")
 def next_image():
     imgs = list_images(INBOX)
-    img_rel = None; img_name = None; pred_label = "unknown"; pred_conf = 0.0
+    img_rel = None
+    img_name = None
+    pred_label = "unknown"
+    pred_conf = 0.0
     if imgs:
         img_rel = imgs[0].relative_to(INBOX)
         img_name = imgs[0].name
@@ -125,48 +154,65 @@ def next_image():
         skip_count=len(list_images(SKIP)),
     )
 
+
 @app.route("/upload", methods=["POST"])
 def upload():
     files = request.files.getlist("photos")
     for f in files:
-        if not f.filename: continue
+        if not f.filename:
+            continue
         dest = INBOX / Path(f.filename).name
         base, ext = os.path.splitext(dest.name)
         i = 1
         while dest.exists():
-            dest = INBOX / f"{base}_{i}{ext}"; i += 1
+            dest = INBOX / f"{base}_{i}{ext}"
+            i += 1
         f.save(dest)
     return redirect(url_for("next_image"))
+
 
 @app.route("/inbox/<path:filename>")
 def serve_inbox(filename):
     return send_from_directory(INBOX, filename)
 
+
 @app.route("/label", methods=["POST"])
 def label():
     img_name = request.form.get("img")
-    if not img_name: return redirect(url_for("next_image"))
+    if not img_name:
+        return redirect(url_for("next_image"))
     img_path = INBOX / img_name
-    if not img_path.exists(): return redirect(url_for("next_image"))
-    action = request.form.get("action","save")
+    if not img_path.exists():
+        return redirect(url_for("next_image"))
+    action = request.form.get("action", "save")
 
     pred_label, pred_conf = dumb_predict(img_path)
-    confirmed = request.form.get("label","unknown").strip()
-    notes = request.form.get("notes","").strip()
+    confirmed = request.form.get("label", "unknown").strip()
+    notes = request.form.get("notes", "").strip()
 
     with CSV_PATH.open("a", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
-        w.writerow([int(time.time()), str(img_path.relative_to(REPO_ROOT)),
-                    pred_label, f"{pred_conf:.3f}", confirmed, notes])
+        w.writerow(
+            [
+                int(time.time()),
+                str(img_path.relative_to(REPO_ROOT)),
+                pred_label,
+                f"{pred_conf:.3f}",
+                confirmed,
+                notes,
+            ]
+        )
 
     target_dir = SKIP if action == "skip" else DONE
     target = target_dir / img_path.name
     i = 1
     while target.exists():
         stem, ext = os.path.splitext(img_path.name)
-        target = target_dir / f"{stem}_{i}{ext}"; i += 1
+        target = target_dir / f"{stem}_{i}{ext}"
+        i += 1
     img_path.rename(target)
     return redirect(url_for("next_image"))
+
 
 @app.route("/stats")
 def stats():
@@ -175,15 +221,18 @@ def stats():
         with CSV_PATH.open("r", encoding="utf-8") as f:
             reader = csv.DictReader(f)
             for row in reader:
-                c = row.get("confirmed_label","unknown") or "unknown"
-                counts[c] = counts.get(c,0) + 1
-    return jsonify({
-        "inbox": len(list_images(INBOX)),
-        "done": len(list_images(DONE)),
-        "skip": len(list_images(SKIP)),
-        "counts": counts,
-        "labels": LABELS
-    })
+                c = row.get("confirmed_label", "unknown") or "unknown"
+                counts[c] = counts.get(c, 0) + 1
+    return jsonify(
+        {
+            "inbox": len(list_images(INBOX)),
+            "done": len(list_images(DONE)),
+            "skip": len(list_images(SKIP)),
+            "counts": counts,
+            "labels": LABELS,
+        }
+    )
+
 
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=5004, debug=True)

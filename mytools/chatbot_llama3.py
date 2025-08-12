@@ -1,6 +1,7 @@
-from flask import Flask, request, render_template
-from pathlib import Path
 import subprocess
+from pathlib import Path
+
+from flask import Flask, render_template, request
 
 app = Flask(__name__)
 
@@ -8,9 +9,11 @@ app = Flask(__name__)
 APP_ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = APP_ROOT / "data"
 
+
 @app.route("/")
 def index():
     return render_template("index.html")
+
 
 @app.route("/new_claim", methods=["GET", "POST"])
 def new_claim():
@@ -49,7 +52,7 @@ def new_claim():
                 ["python3", str(APP_ROOT / "run_pipeline.py"), job_id],
                 capture_output=True,
                 text=True,
-                check=False
+                check=False,
             )
             output_html = f"<pre>{result.stdout}</pre>"
             if result.stderr:
@@ -65,6 +68,6 @@ def new_claim():
 
     return render_template("new_claim.html")
 
+
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=5002, debug=True)
-

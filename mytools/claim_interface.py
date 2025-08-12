@@ -1,7 +1,12 @@
-from tools.chat_blueprint import chat_bp
+import subprocess
+import sys
 from pathlib import Path
-import sys, subprocess
-from flask import current_app as app, request, jsonify
+
+from flask import current_app as app
+from flask import jsonify, request
+
+from tools.chat_blueprint import chat_bp
+
 
 def new_claim():
     project_root = Path(__file__).resolve().parents[1]
@@ -17,27 +22,25 @@ def new_claim():
     cmd = [
         sys.executable,
         str(script_path),
-        "--job", str(job_dir),
-        "--mode", "form"  # remove if your script doesn’t support this
+        "--job",
+        str(job_dir),
+        "--mode",
+        "form",  # remove if your script doesn’t support this
     ]
 
-    result = subprocess.run(
-        cmd,
-        cwd=str(project_root),
-        capture_output=True,
-        text=True
-    )
+    result = subprocess.run(cmd, cwd=str(project_root), capture_output=True, text=True)
 
     if result.returncode != 0:
         app.logger.error(
             "generate_room_name_form failed:\nSTDOUT:\n%s\nSTDERR:\n%s",
-            result.stdout, result.stderr
+            result.stdout,
+            result.stderr,
         )
-        return (f"Form generation failed (exit {result.returncode}).\n"
-                f"STDOUT:\n{result.stdout}\n\nSTDERR:\n{result.stderr}"), 500
+        return (
+            f"Form generation failed (exit {result.returncode}).\n"
+            f"STDOUT:\n{result.stdout}\n\nSTDERR:\n{result.stderr}"
+        ), 500
 
-    return jsonify({
-        "status": "ok",
-        "job": str(job_dir),
-        "stdout": result.stdout.strip()
-    })
+    return jsonify(
+        {"status": "ok", "job": str(job_dir), "stdout": result.stdout.strip()}
+    )

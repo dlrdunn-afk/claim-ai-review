@@ -4,6 +4,7 @@ import os
 input_csv = "out/estimate_xact_final.csv"
 output_html = "out/estimate_preview.html"
 
+
 def mm_to_ft_in(mm_str):
     try:
         mm = float(mm_str)
@@ -14,8 +15,9 @@ def mm_to_ft_in(mm_str):
     except:
         return mm_str  # Return original if conversion fails
 
+
 # Read the CSV
-with open(input_csv, newline='') as f:
+with open(input_csv, newline="") as f:
     reader = csv.reader(f)
     rows = list(reader)
 

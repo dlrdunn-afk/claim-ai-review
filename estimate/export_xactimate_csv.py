@@ -14,6 +14,7 @@ We also append a unit to the quantity if it's missing.
 
 FIELDNAMES_OUT = ["Line Item Code", "Room", "Quantity/Length"]
 
+
 def detect_unit(code: str, desc: str) -> str:
     c = (code or "").upper()
     d = (desc or "").lower()
@@ -21,10 +22,16 @@ def detect_unit(code: str, desc: str) -> str:
     # Heuristics for common items; adjust as needed
     if c in {"DRYBD", "DRYRM2", "BASEDEM", "BASEINST"} or "lf" in d or "linear" in d:
         return "LF"
-    if c in {"FLRPLS", "PNTINT", "PNTWALL", "PAINT"} or "sf" in d or "per sf" in d or "square" in d:
+    if (
+        c in {"FLRPLS", "PNTINT", "PNTWALL", "PAINT"}
+        or "sf" in d
+        or "per sf" in d
+        or "square" in d
+    ):
         return "SF"
     # Default
     return "QTY"
+
 
 def normalize_qty(q: str, unit: str) -> str:
     s = (q or "").strip()
@@ -44,6 +51,7 @@ def normalize_qty(q: str, unit: str) -> str:
         # keep as-is if not numeric
         pass
     return f"{s} {unit}"
+
 
 def main():
     job_id = sys.argv[1] if len(sys.argv) > 1 else "job-0001"
@@ -75,11 +83,9 @@ def main():
             unit = detect_unit(code, desc)
             qty_out = normalize_qty(qty, unit)
 
-            cleaned.append({
-                "Line Item Code": code,
-                "Room": room,
-                "Quantity/Length": qty_out
-            })
+            cleaned.append(
+                {"Line Item Code": code, "Room": room, "Quantity/Length": qty_out}
+            )
 
     with dst.open("w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=FIELDNAMES_OUT)
@@ -87,6 +93,7 @@ def main():
         w.writerows(cleaned)
 
     print(f"✅ Exported for Xactimate: {dst}  (rows: {len(cleaned)})")
+
 
 if __name__ == "__main__":
     main()

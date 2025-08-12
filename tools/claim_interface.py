@@ -1,19 +1,44 @@
 from __future__ import annotations
-from flask import Flask, request as flask_request, render_template_string, send_from_directory, flash, redirect, url_for
+
+from flask import Flask, flash, redirect, render_template_string
+from flask import request as flask_request
+from flask import send_from_directory, url_for
 
 # Cause of Loss options (used in dropdown)
 CAUSES = [
-    "hurricane", "windstorm", "hail", "flood", "mold", "fire", "lightning", "smoke", "explosion",
-    "riot_civil_commotion", "vandalism", "theft", "falling_object", "weight_of_ice_snow_sleet",
-    "volcanic_eruption", "sudden_accidental_water_discharge", "freezing", "electrical_surge",
-    "vehicle_impact", "aircraft_impact", "other"
+    "hurricane",
+    "windstorm",
+    "hail",
+    "flood",
+    "mold",
+    "fire",
+    "lightning",
+    "smoke",
+    "explosion",
+    "riot_civil_commotion",
+    "vandalism",
+    "theft",
+    "falling_object",
+    "weight_of_ice_snow_sleet",
+    "volcanic_eruption",
+    "sudden_accidental_water_discharge",
+    "freezing",
+    "electrical_surge",
+    "vehicle_impact",
+    "aircraft_impact",
+    "other",
 ]
 
-import os, time, shutil, subprocess
-from pathlib import Path
 import json
+import os
+import shutil
+import subprocess
+import time
+from pathlib import Path
 from typing import Iterable
-from flask import Flask, request, render_template_string, redirect, url_for, send_from_directory, jsonify, flash
+
+from flask import (Flask, flash, jsonify, redirect, render_template_string,
+                   request, send_from_directory, url_for)
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
@@ -22,17 +47,25 @@ app.secret_key = "dev"
 ROOT = Path(__file__).resolve().parents[1]
 UPLOADS = ROOT / "uploads"
 OUT = ROOT / "out"
-CLAIM_CAUSES = ["Flood","Wind","Hurricane","Hail","Fire","Water","Mold"]
+CLAIM_CAUSES = ["Flood", "Wind", "Hurricane", "Hail", "Fire", "Water", "Mold"]
 LOGS = ROOT / "logs"
+
+
 def slug_job(x: str) -> str:
     import re
+
     y = re.sub(r"[^a-zA-Z0-9_-]+", "-", (x or "").strip())
     return re.sub(r"-+", "-", y).strip("-").lower() or "job-0001"
 
+
 def _best_estimate(job_dir):
     # Preference order
-    pref = ["estimate_xact_with_notes.csv","estimate_xact_final.csv",
-            "estimate_xact_import.csv","estimate_xact.csv"]
+    pref = [
+        "estimate_xact_with_notes.csv",
+        "estimate_xact_final.csv",
+        "estimate_xact_import.csv",
+        "estimate_xact.csv",
+    ]
     for name in pref:
         f = job_dir / name
         if f.exists():
@@ -42,31 +75,60 @@ def _best_estimate(job_dir):
         return f.name
     return None
 
-for p in (UPLOADS, OUT, LOGS): p.mkdir(exist_ok=True)
+
+for p in (UPLOADS, OUT, LOGS):
+    p.mkdir(exist_ok=True)
 
 # Optional: reuse chat + scraper if present
 try:
     import sys
-    if str(ROOT) not in sys.path: sys.path.insert(0, str(ROOT))
+
+    if str(ROOT) not in sys.path:
+        sys.path.insert(0, str(ROOT))
     from tools.chat_widget import chatbp
+
     app.register_blueprint(chatbp)
 except Exception:
     pass
 
 try:
     from tools.scraper_blueprint import scraperbp
+
     app.register_blueprint(scraperbp)
 except Exception:
     pass
 
 ALLOWED = {
     "policy": {".pdf"},
-    "photos": {".jpg",".jpeg",".png",".webp",".bmp",".tif",".tiff",".heic",".heif",".pdf"},
-    "preloss": {".jpg",".jpeg",".png",".webp",".bmp",".tif",".tiff",".heic",".heif",".pdf"},
+    "photos": {
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".webp",
+        ".bmp",
+        ".tif",
+        ".tiff",
+        ".heic",
+        ".heif",
+        ".pdf",
+    },
+    "preloss": {
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".webp",
+        ".bmp",
+        ".tif",
+        ".tiff",
+        ".heic",
+        ".heif",
+        ".pdf",
+    },
     "floorplan_xml": {".xml"},
-    "floorplan_img": {".jpg",".jpeg",".png",".pdf"},
-    "docs": {".pdf",".doc",".docx",".xlsx",".xls",".txt",".csv",".json",".zip"},
+    "floorplan_img": {".jpg", ".jpeg", ".png", ".pdf"},
+    "docs": {".pdf", ".doc", ".docx", ".xlsx", ".xls", ".txt", ".csv", ".json", ".zip"},
 }
+
 
 def save_files(files: Iterable, dest: Path, allowed: set[str]) -> list[str]:
     dest.mkdir(parents=True, exist_ok=True)
@@ -86,6 +148,7 @@ def save_files(files: Iterable, dest: Path, allowed: set[str]) -> list[str]:
         target.write_bytes(f.read())
         saved.append(target.name)
     return saved
+
 
 INDEX = """
 <!doctype html>
@@ -228,43 +291,55 @@ INDEX = """
 </div>
 """
 
+
 @app.route("/")
 def home():
     outs = []
     for jobdir in sorted(OUT.glob("*")):
         for f in sorted(jobdir.glob("*")):
             outs.append((jobdir.name, f.name))
-    return render_template_string(INDEX, outputs=outs, causes=CAUSES, flask_request=flask_request)
+    return render_template_string(
+        INDEX, outputs=outs, causes=CAUSES, flask_request=flask_request
+    )
 
 
 @app.route("/run", methods=["POST"])
 def run_pipeline():
-    cause = (flask_request.form.get('cause') or 'other').strip()
-    import subprocess, time, shutil
-    from flask import request, redirect, url_for, flash
+    cause = (flask_request.form.get("cause") or "other").strip()
+    import shutil
+    import subprocess
+    import time
+
+    from flask import flash, redirect, request, url_for
 
     job = slug_job(flask_request.form.get("job"))
     # Save cause-of-loss to meta.json in both uploads and out
     try:
-        meta = {'job': job, 'cause_of_loss': cause}
-        (UPLOADS/job/'meta.json').write_text(json.dumps(meta, indent=2), encoding='utf-8')
-        (OUT/job/'meta.json').write_text(json.dumps(meta, indent=2), encoding='utf-8')
+        meta = {"job": job, "cause_of_loss": cause}
+        (UPLOADS / job / "meta.json").write_text(
+            json.dumps(meta, indent=2), encoding="utf-8"
+        )
+        (OUT / job / "meta.json").write_text(
+            json.dumps(meta, indent=2), encoding="utf-8"
+        )
     except Exception as e:
-        app.logger.warning(f'Could not write meta.json: {e}')
+        app.logger.warning(f"Could not write meta.json: {e}")
     jobdir = UPLOADS / job
     outdir = OUT / job
     jobdir.mkdir(parents=True, exist_ok=True)
     outdir.mkdir(parents=True, exist_ok=True)
 
-    rp = (ROOT / "run_pipeline.py")
-    log = (LOGS / f"run_{job}_{int(time.time())}.log")
+    rp = ROOT / "run_pipeline.py"
+    log = LOGS / f"run_{job}_{int(time.time())}.log"
 
     # 1) Run pipeline if present (write to jobdir/outdir)
     if rp.exists():
         with open(log, "wb") as L:
             subprocess.run(
                 ["python3", str(rp), "--job", str(jobdir), "--out", str(outdir)],
-                cwd=str(ROOT), stdout=L, stderr=subprocess.STDOUT
+                cwd=str(ROOT),
+                stdout=L,
+                stderr=subprocess.STDOUT,
             )
 
     # 2) Sweep any top-level out/*.csv into out/<job>/ (handles misrouted outputs)
@@ -277,22 +352,24 @@ def run_pipeline():
     # 3) If no CSV present, write a small stub so UI can open something
     if not any(outdir.glob("*.csv")):
         (outdir / "estimate_xact_with_notes.csv").write_text(
-            "room,item,qty,notes\nLiving Room,DRY1/2,10,stub run\n",
-            encoding="utf-8"
+            "room,item,qty,notes\nLiving Room,DRY1/2,10,stub run\n", encoding="utf-8"
         )
 
     # 4) Pick best and redirect with auto-open
     best = _best_estimate(outdir)
     if best:
         flash(f"✅ Final estimate ready: {best}")
-        open_href = url_for('download', job=job, fname=best)
-        return redirect(url_for('home', open=open_href))
+        open_href = url_for("download", job=job, fname=best)
+        return redirect(url_for("home", open=open_href))
     else:
         flash("Pipeline finished, but no estimate CSV found.")
-        return redirect(url_for('home'))
+        return redirect(url_for("home"))
+
+
 @app.route("/out/<job>/<path:fname>")
 def download(job, fname):
     return send_from_directory(OUT / job, fname, as_attachment=False)
+
 
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=5002, debug=True)
@@ -301,7 +378,9 @@ if __name__ == "__main__":
 @app.route("/upload", methods=["POST"])
 def upload():
     import json
-    from flask import request, redirect, url_for, flash
+
+    from flask import flash, redirect, request, url_for
+
     job = slug_job(flask_request.form.get("job") or "job-0001")
     cause = (flask_request.form.get("cause") or "Flood").strip()
 
@@ -332,6 +411,7 @@ def upload():
     flash(f"Uploaded {len(files)} file(s) to job {job}")
     return redirect(url_for("index"))
 
+
 # --- upload endpoint guard (auto-added) ---
 try:
     upload  # type: ignore[name-defined]
@@ -341,9 +421,13 @@ try:
     except Exception:
         pass
 except NameError:
+
     @app.route("/upload", methods=["POST"])
     def upload():
-        from flask import request, redirect, url_for, flash
+        from flask import flash, redirect, request, url_for
+
         flash("Upload route was missing; a minimal handler was auto-inserted.")
         return redirect(url_for("index"))
+
+
 # --- end guard ---

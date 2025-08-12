@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
-import os, json, time, requests
+import json
+import os
+import time
 from pathlib import Path
-from flask import Flask, render_template, request, jsonify
+
+import requests
+from flask import Flask, jsonify, render_template, request
 
 APP_ROOT = Path(__file__).resolve().parents[1]
 TEMPLATES_DIR = APP_ROOT / "templates"
@@ -19,13 +23,18 @@ SYSTEM_PROMPT = (
 app = Flask(__name__, template_folder=str(TEMPLATES_DIR))
 CHAT_HISTORY = [{"role": "system", "content": SYSTEM_PROMPT}]
 
+
 def save_mem(role, content):
     with open(MEM_FILE, "a") as f:
-        f.write(json.dumps({"ts": time.time(), "role": role, "content": content}) + "\n")
+        f.write(
+            json.dumps({"ts": time.time(), "role": role, "content": content}) + "\n"
+        )
+
 
 @app.route("/chat")
 def chat_page():
     return render_template("chat.html")
+
 
 @app.route("/api/chat", methods=["POST"])
 def api_chat():
@@ -44,13 +53,16 @@ def api_chat():
             timeout=120,
         )
         r.raise_for_status()
-        reply = (r.json().get("message") or {}).get("content", "").strip() or "(no response)"
+        reply = (r.json().get("message") or {}).get(
+            "content", ""
+        ).strip() or "(no response)"
     except Exception as e:
         reply = f"Error talking to Ollama: {e}"
 
     CHAT_HISTORY.append({"role": "assistant", "content": reply})
     save_mem("assistant", reply)
     return jsonify({"reply": reply})
+
 
 if __name__ == "__main__":
     # Runs on http://127.0.0.1:5003/chat

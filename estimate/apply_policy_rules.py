@@ -1,4 +1,7 @@
-import csv, json, os, sys
+import csv
+import json
+import os
+import sys
 
 print("🔊 apply_policy_rules.py: starting…")
 
@@ -7,6 +10,7 @@ POLICY_JSON = "data/job-0001/policy_summary.json"
 JOB_JSON = "data/job-0001/job_metadata.json"
 OUT_CSV = "out/estimate_xact_final.csv"
 QA_CSV = "out/estimate_policy_QA.csv"
+
 
 def load_json(path):
     if not os.path.exists(path):
@@ -19,13 +23,16 @@ def load_json(path):
             print(f"❌ Could not parse JSON {path}: {e}")
             return {}
 
-policy = load_json(POLICY_JSON)   # e.g., {"ALE": true, "MoldLimit": 10000}
-job = load_json(JOB_JSON)         # e.g., {"cause_of_loss":"Flood","water_height_in":3}
+
+policy = load_json(POLICY_JSON)  # e.g., {"ALE": true, "MoldLimit": 10000}
+job = load_json(JOB_JSON)  # e.g., {"cause_of_loss":"Flood","water_height_in":3}
 
 cause = (job.get("cause_of_loss") or "").strip().lower()
 
+
 def has_ale():
     return bool(policy.get("ALE", True))
+
 
 def mold_cap():
     cap = policy.get("MoldLimit")
@@ -34,14 +41,17 @@ def mold_cap():
     except:
         return None
 
+
 def is_flood():
     return "flood" in cause
+
 
 def water_height_in():
     try:
         return float(job.get("water_height_in", 0))
     except:
         return 0.0
+
 
 def adjust_for_peril(row):
     desc = (row.get("Description") or "").lower()
@@ -52,7 +62,7 @@ def adjust_for_peril(row):
             h = water_height_in()
             if h > 0:
                 target_in = max(12.0, min(24.0, h + 12.0))
-                notes += f" | Flood: drywall addressed to ~{int(target_in)}\" above waterline."
+                notes += f' | Flood: drywall addressed to ~{int(target_in)}" above waterline.'
         if "tile" in desc and ("replace" in desc or "new" in desc):
             notes += " | Flood: tile replacement often excluded; adjust to clean/regrout if salvageable."
         if "cabinet" in desc and ("base" in desc or "lower" in desc):
@@ -61,11 +71,13 @@ def adjust_for_peril(row):
     row["Notes"] = notes
     return row
 
+
 def covered(row):
     code = (row.get("Line Item Code") or "").upper().strip()
     if code == "ALE" and not has_ale():
         return False, "ALE removed (no ALE coverage)."
     return True, ""
+
 
 def annotate_mold(row):
     cap = mold_cap()
@@ -77,6 +89,7 @@ def annotate_mold(row):
         note += f" | Subject to mold sublimit (${int(cap):,})."
         row["Notes"] = note
     return row
+
 
 if not os.path.exists(MERGED_IN):
     print(f"❌ Missing merged estimate: {MERGED_IN}")
