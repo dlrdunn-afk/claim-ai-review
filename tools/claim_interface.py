@@ -1,19 +1,21 @@
 from __future__ import annotations
-from flask import Flask, request as flask_request, render_template_string, send_from_directory, flash, redirect, url_for
 
-# Cause of Loss options (used in dropdown)
-CAUSES = [
-    "hurricane", "windstorm", "hail", "flood", "mold", "fire", "lightning", "smoke", "explosion",
-    "riot_civil_commotion", "vandalism", "theft", "falling_object", "weight_of_ice_snow_sleet",
-    "volcanic_eruption", "sudden_accidental_water_discharge", "freezing", "electrical_surge",
-    "vehicle_impact", "aircraft_impact", "other"
-]
-
-import os, time, shutil, subprocess
-from pathlib import Path
 import json
+import shutil
+import subprocess
+import time
+from pathlib import Path
 from typing import Iterable
-from flask import Flask, request, render_template_string, redirect, url_for, send_from_directory, jsonify, flash
+
+from flask import (
+    Flask,
+    flash,
+    redirect,
+    render_template_string,
+    request,
+    send_from_directory,
+    url_for,
+)
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
@@ -22,55 +24,125 @@ app.secret_key = "dev"
 ROOT = Path(__file__).resolve().parents[1]
 UPLOADS = ROOT / "uploads"
 OUT = ROOT / "out"
-CLAIM_CAUSES = ["Flood","Wind","Hurricane","Hail","Fire","Water","Mold"]
 LOGS = ROOT / "logs"
+for p in (UPLOADS, OUT, LOGS):
+    p.mkdir(exist_ok=True)
+
+# Cause of Loss options (used in dropdown)
+CAUSES = [
+    "hurricane",
+    "windstorm",
+    "hail",
+    "flood",
+    "mold",
+    "fire",
+    "lightning",
+    "smoke",
+    "explosion",
+    "riot_civil_commotion",
+    "vandalism",
+    "theft",
+    "falling_object",
+    "weight_of_ice_snow_sleet",
+    "volcanic_eruption",
+    "sudden_accidental_water_discharge",
+    "freezing",
+    "electrical_surge",
+    "vehicle_impact",
+    "aircraft_impact",
+    "other",
+]
+
+# Allowed file extensions for each upload category
+ALLOWED = {
+    "policy": {".pdf"},
+    "photos": {
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".webp",
+        ".bmp",
+        ".tif",
+        ".tiff",
+        ".heic",
+        ".heif",
+        ".pdf",
+    },
+    "preloss": {
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".webp",
+        ".bmp",
+        ".tif",
+        ".tiff",
+        ".heic",
+        ".heif",
+        ".pdf",
+    },
+    "floorplan_xml": {".xml"},
+    "floorplan_img": {".jpg", ".jpeg", ".png", ".pdf"},
+    "docs": {".pdf", ".doc", ".docx", ".xlsx", ".xls", ".txt", ".csv", ".json", ".zip"},
+}
+
+# Map form fields to folder names inside the job directory
+DEST_MAP = {
+    "floorplan_xml": "floorplan",
+    "floorplan_img": "floorplan",
+}
+
+# Optional blueprints (chat and image scraper) if present
+try:  # pragma: no cover - optional
+    import sys
+
+    if str(ROOT) not in sys.path:
+        sys.path.insert(0, str(ROOT))
+    from tools.chat_widget import chatbp
+
+    app.register_blueprint(chatbp)
+except Exception:  # pragma: no cover - best effort
+    pass
+
+try:  # pragma: no cover - optional
+    from tools.scraper_blueprint import scraperbp
+
+    app.register_blueprint(scraperbp)
+except Exception:  # pragma: no cover - best effort
+    pass
+
+
 def slug_job(x: str) -> str:
+    """Create a filesystem-friendly job identifier."""
+
     import re
+
     y = re.sub(r"[^a-zA-Z0-9_-]+", "-", (x or "").strip())
     return re.sub(r"-+", "-", y).strip("-").lower() or "job-0001"
 
-def _best_estimate(job_dir):
-    # Preference order
-    pref = ["estimate_xact_with_notes.csv","estimate_xact_final.csv",
-            "estimate_xact_import.csv","estimate_xact.csv"]
+
+def _best_estimate(job_dir: Path) -> str | None:
+    """Return the preferred estimate CSV within *job_dir* if available."""
+
+    pref = [
+        "estimate_xact_with_notes.csv",
+        "estimate_xact_final.csv",
+        "estimate_xact_import.csv",
+        "estimate_xact.csv",
+    ]
     for name in pref:
         f = job_dir / name
         if f.exists():
             return f.name
-    # Fallback: first CSV in dir
     for f in sorted(job_dir.glob("*.csv")):
         return f.name
     return None
 
-for p in (UPLOADS, OUT, LOGS): p.mkdir(exist_ok=True)
-
-# Optional: reuse chat + scraper if present
-try:
-    import sys
-    if str(ROOT) not in sys.path: sys.path.insert(0, str(ROOT))
-    from tools.chat_widget import chatbp
-    app.register_blueprint(chatbp)
-except Exception:
-    pass
-
-try:
-    from tools.scraper_blueprint import scraperbp
-    app.register_blueprint(scraperbp)
-except Exception:
-    pass
-
-ALLOWED = {
-    "policy": {".pdf"},
-    "photos": {".jpg",".jpeg",".png",".webp",".bmp",".tif",".tiff",".heic",".heif",".pdf"},
-    "preloss": {".jpg",".jpeg",".png",".webp",".bmp",".tif",".tiff",".heic",".heif",".pdf"},
-    "floorplan_xml": {".xml"},
-    "floorplan_img": {".jpg",".jpeg",".png",".pdf"},
-    "docs": {".pdf",".doc",".docx",".xlsx",".xls",".txt",".csv",".json",".zip"},
-}
 
 def save_files(files: Iterable, dest: Path, allowed: set[str]) -> list[str]:
+    """Save uploaded *files* into *dest* if they have allowed extensions."""
+
     dest.mkdir(parents=True, exist_ok=True)
-    saved = []
+    saved: list[str] = []
     for f in files:
         if not getattr(f, "filename", ""):
             continue
@@ -81,11 +153,12 @@ def save_files(files: Iterable, dest: Path, allowed: set[str]) -> list[str]:
         target = dest / name
         i = 1
         while target.exists():
-            target = dest / (f"{Path(name).stem}_{i}{ext}")
+            target = dest / f"{Path(name).stem}_{i}{ext}"
             i += 1
         target.write_bytes(f.read())
         saved.append(target.name)
     return saved
+
 
 INDEX = """
 <!doctype html>
@@ -99,7 +172,6 @@ INDEX = """
   label{display:block;margin:6px 0 8px}
   input[type=file],input[type=text]{padding:10px;border:1px solid #ccc;border-radius:10px;width:100%}
   .row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
   button,a.button{padding:10px 14px;border-radius:12px;border:1px solid #bbb;background:#f7f7f7;text-decoration:none;color:#111;cursor:pointer}
   small{color:#666}
   ul.list{margin:8px 0 0 16px}
@@ -113,16 +185,15 @@ INDEX = """
     </div>
   {% endif %}
 {% endwith %}
-{% if flask_request.args.get('open') %}
+{% if request.args.get('open') %}
   <script>
-    // auto-open detailed estimate in a new tab
     (function(){
       try {
-        const openPath = decodeURIComponent("{{ flask_request.args.get('open') }}");
+        const openPath = decodeURIComponent("{{ request.args.get('open') }}");
         if (openPath) window.open(openPath, "_blank");
       } catch(e){}
     })();
-  </script><!-- auto-open -->
+  </script>
 {% endif %}
 
 <div class="card">
@@ -159,15 +230,15 @@ INDEX = """
     <div class="grid">
       <div class="card">
         <h4>Photos (Bulk)</h4>
-        <label>Post‑loss Photos (JPG/PNG/HEIC/PDF)
+        <label>Post-loss Photos (JPG/PNG/HEIC/PDF)
           <input type="file" name="photos" accept="image/*,.heic,.heif,.pdf" multiple>
         </label>
         <small>Saved to <code>uploads/&lt;job&gt;/photos/</code></small>
       </div>
 
       <div class="card">
-        <h4>Pre‑loss Photos (Bulk)</h4>
-        <label>Pre‑loss Photos (JPG/PNG/HEIC/PDF)
+        <h4>Pre-loss Photos (Bulk)</h4>
+        <label>Pre-loss Photos (JPG/PNG/HEIC/PDF)
           <input type="file" name="preloss" accept="image/*,.heic,.heif,.pdf" multiple>
         </label>
         <small>Saved to <code>uploads/&lt;job&gt;/preloss/</code></small>
@@ -199,16 +270,12 @@ INDEX = """
     <form action="{{ url_for('run_pipeline') }}" method="post">
       <label>Job ID
         <input type="text" name="job" value="job-0001" required>
-  <label>Cause of Loss</label>
-<select id="cause" name="cause" required style="min-width:240px;">
-  <option value="" disabled selected>Select a cause…</option>
-  {% for c in causes %}<option value="{{ c }}">{{ c.replace("_"," ") }}</option>{% endfor %}
-</select>
-<select name="cause">
-    {% for c in CLAIM_CAUSES %}
-      <option value="{{c}}">{{c}}</option>
-    {% endfor %}
-  </select>
+      </label>
+      <label>Cause of Loss
+        <select id="cause" name="cause" required style="min-width:240px;">
+          <option value="" disabled selected>Select a cause…</option>
+          {% for c in causes %}<option value="{{ c }}">{{ c.replace('_',' ') }}</option>{% endfor %}
+        </select>
       </label>
       <button type="submit">Run</button>
     </form>
@@ -228,122 +295,96 @@ INDEX = """
 </div>
 """
 
+
 @app.route("/")
 def home():
-    outs = []
+    """Render the main interface."""
+
+    outs: list[tuple[str, str]] = []
     for jobdir in sorted(OUT.glob("*")):
         for f in sorted(jobdir.glob("*")):
             outs.append((jobdir.name, f.name))
-    return render_template_string(INDEX, outputs=outs, causes=CAUSES, flask_request=flask_request)
+    return render_template_string(INDEX, outputs=outs, causes=CAUSES, request=request)
+
+
+@app.route("/upload", methods=["POST"])
+def upload():
+    """Handle file uploads for a job."""
+
+    job = slug_job(request.form.get("job"))
+    total = 0
+    for field, allowed in ALLOWED.items():
+        uploaded = request.files.getlist(field)
+        if not uploaded:
+            continue
+        dest_name = DEST_MAP.get(field, field)
+        saved = save_files(uploaded, UPLOADS / job / dest_name, allowed)
+        total += len(saved)
+    if total:
+        flash(f"Uploaded {total} file(s) to job {job}")
+    else:
+        flash("No files uploaded.")
+    return redirect(url_for("home"))
 
 
 @app.route("/run", methods=["POST"])
 def run_pipeline():
-    cause = (flask_request.form.get('cause') or 'other').strip()
-    import subprocess, time, shutil
-    from flask import request, redirect, url_for, flash
+    """Execute the processing pipeline for the given job."""
 
-    job = slug_job(flask_request.form.get("job"))
-    # Save cause-of-loss to meta.json in both uploads and out
-    try:
-        meta = {'job': job, 'cause_of_loss': cause}
-        (UPLOADS/job/'meta.json').write_text(json.dumps(meta, indent=2), encoding='utf-8')
-        (OUT/job/'meta.json').write_text(json.dumps(meta, indent=2), encoding='utf-8')
-    except Exception as e:
-        app.logger.warning(f'Could not write meta.json: {e}')
+    job = slug_job(request.form.get("job"))
+    cause = (request.form.get("cause") or "other").strip()
+
     jobdir = UPLOADS / job
     outdir = OUT / job
     jobdir.mkdir(parents=True, exist_ok=True)
     outdir.mkdir(parents=True, exist_ok=True)
 
-    rp = (ROOT / "run_pipeline.py")
-    log = (LOGS / f"run_{job}_{int(time.time())}.log")
+    meta = {"job": job, "cause_of_loss": cause}
+    try:
+        (UPLOADS / job / "meta.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
+        (outdir / "meta.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
+    except Exception as e:  # pragma: no cover - best effort
+        app.logger.warning(f"Could not write meta.json: {e}")
 
-    # 1) Run pipeline if present (write to jobdir/outdir)
-    if rp.exists():
+    rp = ROOT / "run_pipeline.py"
+    log = LOGS / f"run_{job}_{int(time.time())}.log"
+    if rp.exists():  # pragma: no cover - external script
         with open(log, "wb") as L:
             subprocess.run(
                 ["python3", str(rp), "--job", str(jobdir), "--out", str(outdir)],
-                cwd=str(ROOT), stdout=L, stderr=subprocess.STDOUT
+                cwd=str(ROOT),
+                stdout=L,
+                stderr=subprocess.STDOUT,
             )
 
-    # 2) Sweep any top-level out/*.csv into out/<job>/ (handles misrouted outputs)
     for f in ROOT.joinpath("out").glob("*.csv"):
         try:
             shutil.move(str(f), str(outdir / f.name))
-        except Exception:
+        except Exception:  # pragma: no cover - best effort
             pass
 
-    # 3) If no CSV present, write a small stub so UI can open something
     if not any(outdir.glob("*.csv")):
         (outdir / "estimate_xact_with_notes.csv").write_text(
             "room,item,qty,notes\nLiving Room,DRY1/2,10,stub run\n",
-            encoding="utf-8"
+            encoding="utf-8",
         )
 
-    # 4) Pick best and redirect with auto-open
     best = _best_estimate(outdir)
     if best:
         flash(f"✅ Final estimate ready: {best}")
-        open_href = url_for('download', job=job, fname=best)
-        return redirect(url_for('home', open=open_href))
-    else:
-        flash("Pipeline finished, but no estimate CSV found.")
-        return redirect(url_for('home'))
+        open_href = url_for("download", job=job, fname=best)
+        return redirect(url_for("home", open=open_href))
+    flash("Pipeline finished, but no estimate CSV found.")
+    return redirect(url_for("home"))
+
+
 @app.route("/out/<job>/<path:fname>")
-def download(job, fname):
+def download(job: str, fname: str):
+    """Serve output files for download/viewing."""
+
     return send_from_directory(OUT / job, fname, as_attachment=False)
 
-if __name__ == "__main__":
+
+if __name__ == "__main__":  # pragma: no cover - manual run
     app.run(host="127.0.0.1", port=5002, debug=True)
 
-
-@app.route("/upload", methods=["POST"])
-def upload():
-    import json
-    from flask import request, redirect, url_for, flash
-    job = slug_job(flask_request.form.get("job") or "job-0001")
-    cause = (flask_request.form.get("cause") or "Flood").strip()
-
-    # Save cause into meta.json
-    (OUT / job).mkdir(parents=True, exist_ok=True)
-    meta_path = OUT / job / "meta.json"
-    try:
-        meta = {}
-        if meta_path.exists():
-            meta = json.loads(meta_path.read_text(encoding="utf-8"))
-        meta["cause"] = cause
-        meta_path.write_text(json.dumps(meta, indent=2), encoding="utf-8")
-    except Exception as e:
-        app.logger.warning(f"Could not write meta.json: {e}")
-
-    # Save uploaded files
-    files = flask_request.files.getlist("files")
-    if not files:
-        flash("No files uploaded.")
-        return redirect(url_for("index"))
-
-    job_dir = UPLOADS / job
-    job_dir.mkdir(parents=True, exist_ok=True)
-    for f in files:
-        if f and f.filename:
-            (job_dir / f.filename).write_bytes(f.read())
-
-    flash(f"Uploaded {len(files)} file(s) to job {job}")
-    return redirect(url_for("index"))
-
-# --- upload endpoint guard (auto-added) ---
-try:
-    upload  # type: ignore[name-defined]
-    # Ensure route is registered with the expected endpoint name.
-    try:
-        app.add_url_rule("/upload", "upload", upload, methods=["POST"])
-    except Exception:
-        pass
-except NameError:
-    @app.route("/upload", methods=["POST"])
-    def upload():
-        from flask import request, redirect, url_for, flash
-        flash("Upload route was missing; a minimal handler was auto-inserted.")
-        return redirect(url_for("index"))
-# --- end guard ---
