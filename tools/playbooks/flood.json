@@ -1,0 +1,22 @@
+{
+  "cause_of_loss": "flood",
+  "global_items": [
+    {"item": "Muck-out/Flood loss cleanup - Heavy", "qty": 1},
+    {"item": "Apply anti-microbial agent to floor", "qty": 1},
+    {"item": "Structural drying per SF - Class 1 (Bid Item)", "qty": 1}
+  ],
+  "rooms": {
+    "Living Room": [
+      {"item": "Remove 1/2\" drywall up to 4'"},
+      {"item": "Baseboard - 5 1/4\""},
+      {"item": "Seal walls w/PVA primer"},
+      {"item": "Paint walls - two coats"}
+    ],
+    "Kitchen": [
+      {"item": "Detach & reset sink faucet"},
+      {"item": "Lower cabinets - replace"},
+      {"item": "Countertop - laminate"},
+      {"item": "Tile backsplash - install"}
+    ]
+  }
+}

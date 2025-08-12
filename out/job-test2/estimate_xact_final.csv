@@ -1,0 +1,10 @@
+Room,Line Item Code,Description,Quantity/Length,Room Name,Room ID,Ceiling Height (mm),Wall IDs,Notes
+LIVING ROOM,DRYBD,Drywall base prep (LF),10,Living Room,SKT42,12320,38 70 77 80 91 93 94 102 114 121 136,
+LIVING ROOM,FLRPLS,Flooring - replace (SF),50,Living Room,SKT42,12320,38 70 77 80 91 93 94 102 114 121 136,
+LIVING ROOM,PNTINT,Paint interior walls (SF),50,Living Room,SKT42,12320,38 70 77 80 91 93 94 102 114 121 136,
+KITCHEN,DRYBD,Drywall base prep (LF),10,Kitchen,SKT76,11305,72 78 110 122,
+KITCHEN,FLRPLS,Flooring - replace (SF),50,Kitchen,SKT76,11305,72 78 110 122,
+KITCHEN,PNTINT,Paint interior walls (SF),50,Kitchen,SKT76,11305,72 78 110 122,
+BEDROOM,DRYBD,Drywall base prep (LF),10,Bedroom,SKT17,12445,14 34 61 101 104 105 119 121,
+BEDROOM,FLRPLS,Flooring - replace (SF),50,Bedroom,SKT17,12445,14 34 61 101 104 105 119 121,
+BEDROOM,PNTINT,Paint interior walls (SF),50,Bedroom,SKT17,12445,14 34 61 101 104 105 119 121,

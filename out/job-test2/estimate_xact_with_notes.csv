@@ -1,0 +1,10 @@
+Room,Line Item Code,Description,Quantity/Length,Justification
+LIVING ROOM,DRYBD,Drywall base prep (LF),10 LF,Added based on room dimensions and scope. Unit: LF.
+LIVING ROOM,FLRPLS,Flooring - replace (SF),50 SQFT,Added based on room dimensions and scope. Unit: SQFT.
+LIVING ROOM,PNTINT,Paint interior walls (SF),50 SQFT,Added based on room dimensions and scope. Unit: SQFT.
+KITCHEN,DRYBD,Drywall base prep (LF),10 LF,Added based on room dimensions and scope. Unit: LF.
+KITCHEN,FLRPLS,Flooring - replace (SF),50 SQFT,Added based on room dimensions and scope. Unit: SQFT.
+KITCHEN,PNTINT,Paint interior walls (SF),50 SQFT,Added based on room dimensions and scope. Unit: SQFT.
+BEDROOM,DRYBD,Drywall base prep (LF),10 LF,Added based on room dimensions and scope. Unit: LF.
+BEDROOM,FLRPLS,Flooring - replace (SF),50 SQFT,Added based on room dimensions and scope. Unit: SQFT.
+BEDROOM,PNTINT,Paint interior walls (SF),50 SQFT,Added based on room dimensions and scope. Unit: SQFT.

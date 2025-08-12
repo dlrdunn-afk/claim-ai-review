@@ -1,0 +1,30 @@
+
+🔹 Running: python3 /Users/daviddunn/Library/Mobile Documents/com~apple~CloudDocs/claim-ai/iguide/export_room_data.py --job
+✅ Room data exported to: /Users/daviddunn/Library/Mobile Documents/com~apple~CloudDocs/claim-ai/out/--job_room_data.csv
+✅ Done: iguide/export_room_data.py
+
+🔹 Running: python3 /Users/daviddunn/Library/Mobile Documents/com~apple~CloudDocs/claim-ai/estimate/generate_room_estimates.py --job
+✅ Loaded 3 rooms from --job_room_data.csv
+✅ Generated estimate using room data → /Users/daviddunn/Library/Mobile Documents/com~apple~CloudDocs/claim-ai/out/estimate_xact.csv
+✅ Done: estimate/generate_room_estimates.py
+
+🔹 Running: python3 /Users/daviddunn/Library/Mobile Documents/com~apple~CloudDocs/claim-ai/estimate/add_justifications.py --job
+✅ Justified estimate saved to: out/estimate_xact_with_notes.csv
+📦 Rows: 9
+✅ Done: estimate/add_justifications.py
+
+🔹 Running: python3 /Users/daviddunn/Library/Mobile Documents/com~apple~CloudDocs/claim-ai/estimate/merge_room_and_estimate.py --job
+✅ Merged estimate saved to: out/estimate_xact_merged.csv
+✅ Done: estimate/merge_room_and_estimate.py
+
+🔹 Running: python3 /Users/daviddunn/Library/Mobile Documents/com~apple~CloudDocs/claim-ai/estimate/apply_policy_rules.py --job
+🔊 apply_policy_rules.py: starting…
+✅ Final policy-aware estimate: out/estimate_xact_final.csv (9 lines)
+✅ No lines removed by policy rules.
+✅ Done: estimate/apply_policy_rules.py
+
+🔹 Running: python3 /Users/daviddunn/Library/Mobile Documents/com~apple~CloudDocs/claim-ai/estimate/export_xactimate_csv.py --job
+✅ Exported for Xactimate: /Users/daviddunn/Library/Mobile Documents/com~apple~CloudDocs/claim-ai/out/estimate_xact_import.csv  (rows: 9)
+✅ Done: estimate/export_xactimate_csv.py
+
+🎉 All steps complete for --job . Check the /out folder.

@@ -1,0 +1,21 @@
+{
+  "cause_of_loss": "mold",
+  "global_items": [
+    {"item": "Set containment (poly, zippers, neg. air)", "qty": 1},
+    {"item": "HEPA air scrubbers - per day", "qty": 3},
+    {"item": "HEPA vacuuming - impacted surfaces", "qty": 1},
+    {"item": "Apply anti-microbial/biocide", "qty": 1}
+  ],
+  "rooms": {
+    "Bathroom": [
+      {"item": "Remove mold-contaminated drywall"},
+      {"item": "Remove/replace cement board"},
+      {"item": "Tile shower - install"}
+    ],
+    "Kitchen": [
+      {"item": "Remove moldy base cabinets"},
+      {"item": "Clean & seal studs"},
+      {"item": "Prime & paint walls (mold-resistant)"}
+    ]
+  }
+}
