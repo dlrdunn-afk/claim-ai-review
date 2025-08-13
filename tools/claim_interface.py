@@ -42,6 +42,15 @@ from flask import (Flask, flash, jsonify, redirect, render_template_string,
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
+
+# --- labeler route aliases ---
+try:
+    from tools import photo_labeler
+    app.add_url_rule("/", endpoint="home", view_func=photo_labeler.home, methods=["GET"])
+    app.add_url_rule("/upload", endpoint="upload", view_func=photo_labeler.upload, methods=["POST"])
+except Exception as e:
+    print("Labeler alias registration failed:", e)
+# --- end labeler route aliases ---
 app.secret_key = "dev"
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -371,8 +380,23 @@ def download(job, fname):
     return send_from_directory(OUT / job, fname, as_attachment=False)
 
 
+
+# === LABELER ALIASES START ===
+try:
+    from tools import photo_labeler as _pl
+    @app.route("/", methods=["GET"])
+    def home():
+        return _pl.home()
+    @app.route("/upload", methods=["POST"])
+    def upload():
+        return _pl.upload()
+except Exception as e:
+    print("Labeler alias registration failed:", e)
+# === LABELER ALIASES END ===
+
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=5002, debug=True)
+        app.run(host='127.0.0.1', port=5002, debug=True)
+app.run(host="127.0.0.1", port=5002, debug=True)
 
 
 @app.route("/upload", methods=["POST"])
@@ -445,3 +469,4 @@ def routes():
 @app.post("/upload")
 def upload_alias():
     return redirect(url_for("run"), code=307)
+
