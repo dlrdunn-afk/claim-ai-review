@@ -1,0 +1,10 @@
+Room,Line Item Code,Description,Quantity/Length,Room Name,Room ID,Ceiling Height (mm),Wall IDs
+LIVING ROOM,DRYBD,Drywall base prep (LF),10,LIVING ROOM,1,,
+LIVING ROOM,FLRPLS,Flooring - replace (SF),50,LIVING ROOM,1,,
+LIVING ROOM,PNTINT,Paint interior walls (SF),50,LIVING ROOM,1,,
+KITCHEN,DRYBD,Drywall base prep (LF),10,KITCHEN,2,,
+KITCHEN,FLRPLS,Flooring - replace (SF),50,KITCHEN,2,,
+KITCHEN,PNTINT,Paint interior walls (SF),50,KITCHEN,2,,
+BEDROOM,DRYBD,Drywall base prep (LF),10,BEDROOM,3,,
+BEDROOM,FLRPLS,Flooring - replace (SF),50,BEDROOM,3,,
+BEDROOM,PNTINT,Paint interior walls (SF),50,BEDROOM,3,,

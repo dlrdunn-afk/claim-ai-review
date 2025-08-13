@@ -14,17 +14,12 @@
 ✅ Done: estimate/add_justifications.py
 
 🔹 Running: python3 /Users/daviddunn/Library/Mobile Documents/com~apple~CloudDocs/claim-ai/estimate/merge_room_and_estimate.py --job
-✅ Merged estimate saved to: out/estimate_xact_merged.csv
+❌ Missing room data file: out/job-0001_room_data.csv
 ✅ Done: estimate/merge_room_and_estimate.py
 
 🔹 Running: python3 /Users/daviddunn/Library/Mobile Documents/com~apple~CloudDocs/claim-ai/estimate/apply_policy_rules.py --job
 🔊 apply_policy_rules.py: starting…
-✅ Final policy-aware estimate: out/estimate_xact_final.csv (9 lines)
-✅ No lines removed by policy rules.
-✅ Done: estimate/apply_policy_rules.py
+❌ Missing merged estimate: out/estimate_xact_merged.csv
+❌ Step failed: python3 /Users/daviddunn/Library/Mobile Documents/com~apple~CloudDocs/claim-ai/estimate/apply_policy_rules.py
 
-🔹 Running: python3 /Users/daviddunn/Library/Mobile Documents/com~apple~CloudDocs/claim-ai/estimate/export_xactimate_csv.py --job
-✅ Exported for Xactimate: /Users/daviddunn/Library/Mobile Documents/com~apple~CloudDocs/claim-ai/out/estimate_xact_import.csv  (rows: 9)
-✅ Done: estimate/export_xactimate_csv.py
-
-🎉 All steps complete for --job . Check the /out folder.
+⛔ Pipeline stopped due to error above.

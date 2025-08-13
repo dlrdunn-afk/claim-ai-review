@@ -1,7 +1,23 @@
 import csv
 import os
 
-room_data_path = "out/job-0001_room_data.csv"
+import os
+
+def _room_data_path(job):
+    slug = os.path.basename(job.rstrip('/')) if job else 'job-0001'
+
+    # Prefer job-specific CSV; fall back to legacy names
+    for cand in (
+        f'out/{slug}_room_data.csv',
+        '_room_data_path(args.job)',
+        'out/--job_room_data.csv',
+    ):
+        if os.path.exists(cand):
+            return cand
+    return f'out/{slug}_room_data.csv'
+
+
+room_data_path = "_room_data_path(args.job)"
 estimate_path = "out/estimate_xact.csv"
 merged_path = "out/estimate_xact_merged.csv"
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from flask import Flask, flash, jsonify, redirect, render_template_string, url_for
+from flask import Flask, flash, redirect, render_template_string
 from flask import request as flask_request
 from flask import send_from_directory, url_for
 
@@ -431,17 +431,3 @@ except NameError:
 
 
 # --- end guard ---
-
-
-@app.get("/routes")
-def routes():
-    data = []
-    for rule in app.url_map.iter_rules():
-        methods = sorted(m for m in rule.methods if m not in ("HEAD", "OPTIONS"))
-        data.append({"rule": str(rule), "endpoint": rule.endpoint, "methods": methods})
-    return jsonify(data)
-
-
-@app.post("/upload")
-def upload_alias():
-    return redirect(url_for("run"), code=307)

@@ -1,0 +1,10 @@
+Room,Line Item Code,Description,Quantity/Length
+LIVING ROOM,DRYBD,Drywall base prep (LF),10
+LIVING ROOM,FLRPLS,Flooring - replace (SF),50
+LIVING ROOM,PNTINT,Paint interior walls (SF),50
+KITCHEN,DRYBD,Drywall base prep (LF),10
+KITCHEN,FLRPLS,Flooring - replace (SF),50
+KITCHEN,PNTINT,Paint interior walls (SF),50
+BEDROOM,DRYBD,Drywall base prep (LF),10
+BEDROOM,FLRPLS,Flooring - replace (SF),50
+BEDROOM,PNTINT,Paint interior walls (SF),50
