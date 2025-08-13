@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from flask import Flask, flash, jsonify, redirect, render_template_string, url_for
+from flask import Flask, flash, jsonify, redirect, render_template_string
 from flask import request as flask_request
 from flask import send_from_directory, url_for
 

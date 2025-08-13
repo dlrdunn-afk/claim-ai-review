@@ -1,5 +1,6 @@
-from flask import Flask, request, render_template_string, jsonify
 import os
+
+from flask import Flask, jsonify, render_template_string, request
 
 app = Flask(__name__)
 
@@ -14,19 +15,21 @@ HTML = """
 <p>See <a href="{{ url_for('routes') }}">/routes</a> to verify registered endpoints.</p>
 """
 
+
 @app.get("/")
 def index():
     return render_template_string(HTML)
 
+
 @app.post("/upload")
 def upload():
-    if 'files' not in request.files:
+    if "files" not in request.files:
         return "No file part", 400
-    files = request.files.getlist('files')
+    files = request.files.getlist("files")
     os.makedirs("out", exist_ok=True)
     saved = []
     for f in files:
-        if not f or f.filename == '':
+        if not f or f.filename == "":
             continue
         path = os.path.join("out", f.filename)
         f.save(path)
@@ -35,6 +38,7 @@ def upload():
         return "No files selected", 400
     return "Saved:\\n" + "\\n".join(saved) + "\\n", 200
 
+
 @app.get("/routes")
 def routes():
     data = []
@@ -42,6 +46,7 @@ def routes():
         methods = sorted(m for m in rule.methods if m not in ("HEAD", "OPTIONS"))
         data.append({"rule": str(rule), "endpoint": rule.endpoint, "methods": methods})
     return jsonify(data)
+
 
 if __name__ == "__main__":
     print("== Route map at startup ==")
