@@ -148,7 +148,7 @@ small{color:#666}
     </div>
     <br>
     <button type="submit">Start scraping</button>
-    <a href="{{ url_for('next_image') }}" style="margin-left:12px">Back to Labeler</a>
+    <a href="{{ url_for(labeler_endpoint) }}" style="margin-left:12px">Back to Labeler</a>
     <p><small>Images save to <code>data/label_inbox/</code> as JPG. You can label them immediately.</small></p>
   </form>
 
@@ -156,10 +156,21 @@ small{color:#666}
     <hr>
     <p><b>Scraping '{{ query }}' ...</b></p>
     <p>Saved: {{ saved }} / Errors: {{ errors }}</p>
-    <p><a href="{{ url_for('next_image') }}">Open Labeler</a></p>
+    <p><a href="{{ url_for(labeler_endpoint) }}">Open Labeler</a></p>
   {% endif %}
 </div>
 """
+
+
+def _labeler_endpoint() -> str:
+    """Return a valid endpoint for the image labeler, if available."""
+    for ep in ("photo_labeler.next_image", "next_image", "home"):
+        try:
+            url_for(ep)
+            return ep
+        except Exception:
+            continue
+    return "scraperbp.scrape_ui"
 
 
 @scraperbp.route("/scrape", methods=["GET", "POST"])
@@ -217,6 +228,7 @@ def scrape_ui():
             saved=saved,
             errors=errors,
             query=query,
+            labeler_endpoint=_labeler_endpoint(),
         )
 
     # GET
@@ -229,4 +241,5 @@ def scrape_ui():
         saved=saved,
         errors=errors,
         query="",
+        labeler_endpoint=_labeler_endpoint(),
     )

@@ -25,8 +25,6 @@ from flask import (Flask, jsonify, redirect, render_template_string, request,
 from tools.chat_widget import chatbp
 
 app = Flask(__name__)
-app.register_blueprint(scraperbp)
-app.register_blueprint(chatbp)
 REPO_ROOT = Path(__file__).resolve().parents[1]
 INBOX = REPO_ROOT / "data" / "label_inbox"
 DONE = REPO_ROOT / "data" / "label_done"
@@ -233,6 +231,9 @@ def stats():
         }
     )
 
+
+app.register_blueprint(scraperbp)
+app.register_blueprint(chatbp)
 
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=5004, debug=True)
